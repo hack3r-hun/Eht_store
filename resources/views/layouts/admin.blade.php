@@ -33,7 +33,7 @@
             <nav class="p-4 space-y-1 flex-1 overflow-y-auto">
                 @php
                     $links = [
-                        ['route' => 'admin.dashboard', 'label' => 'Dashboard', 'match' => 'admin.dashboard', 'icon' => 'chart'],
+                        ['route' => 'admin.dashboard', 'label' => 'Dashboard', 'match' => 'admin.dashboard', 'icon' => 'home'],
                         ['route' => 'admin.statistics.index', 'label' => 'Statistics', 'match' => 'admin.statistics.*', 'icon' => 'chart'],
                         ['route' => 'admin.products.index', 'label' => 'Products', 'match' => 'admin.products.*', 'icon' => 'cube'],
                         ['route' => 'admin.categories.index', 'label' => 'Categories', 'match' => 'admin.categories.*', 'icon' => 'folder'],

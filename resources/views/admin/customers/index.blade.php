@@ -4,17 +4,12 @@
 
 @section('content')
     <x-reveal type="fade-up">
-        <x-admin-page-header :count="$customers->total()" count-label="registered customers" subtitle="Search, filter, and sort customers by account and order activity" />
+        <x-admin-page-header :count="$customers->total()" count-label="registered customers" subtitle="Search customers and sort by order activity" />
     </x-reveal>
 
     <x-reveal type="fade-up" delay="40">
-        <form method="GET" class="admin-card mb-6 grid grid-cols-1 md:grid-cols-4 xl:grid-cols-7 gap-3">
+        <form method="GET" class="admin-card mb-6 grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-3 items-center">
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, email, phone" class="input-field md:col-span-2">
-            <select name="verified" class="input-field">
-                <option value="">Any verification</option>
-                <option value="yes" @selected(request('verified') === 'yes')>Verified</option>
-                <option value="no" @selected(request('verified') === 'no')>Unverified</option>
-            </select>
             <select name="orders" class="input-field">
                 <option value="">Any orders</option>
                 <option value="with" @selected(request('orders') === 'with')>Has orders</option>
@@ -34,8 +29,6 @@
                 <button type="submit" class="btn-primary !py-2.5 !px-5 text-sm flex-1">Filter</button>
                 <a href="{{ route('admin.customers.index') }}" class="btn-outline !py-2.5 !px-5 text-sm">Reset</a>
             </div>
-            <input type="date" name="joined_from" value="{{ request('joined_from') }}" class="input-field">
-            <input type="date" name="joined_to" value="{{ request('joined_to') }}" class="input-field">
         </form>
     </x-reveal>
 
@@ -68,7 +61,7 @@
                                 <td class="text-slate-600">{{ $customer->email }}</td>
                                 <td class="text-slate-500">{{ $customer->phone ?? '-' }}</td>
                                 <td>
-                                    <span class="admin-badge bg-indigo-100 text-indigo-700">{{ $customer->orders_count }} orders</span>
+                                    <span class="admin-badge bg-sage-100 text-sage-700">{{ $customer->orders_count }} {{ Str::plural('order', $customer->orders_count) }}</span>
                                 </td>
                                 <td class="font-semibold text-slate-900">{{ shop_money($customer->orders_total ?? 0) }}</td>
                                 <td>

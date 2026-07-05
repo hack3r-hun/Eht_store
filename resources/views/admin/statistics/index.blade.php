@@ -8,18 +8,16 @@
     </x-reveal>
 
     <x-reveal type="fade-up" delay="40">
-        <form method="GET" class="admin-card mb-6 grid grid-cols-1 md:grid-cols-6 gap-3">
-            <select name="period" class="input-field" onchange="this.form.submit()">
-                <option value="day" @selected($period === 'day')>Today</option>
-                <option value="month" @selected($period === 'month')>Month</option>
-                <option value="year" @selected($period === 'year')>Year</option>
-                <option value="custom" @selected($period === 'custom')>Custom</option>
+        <form method="GET" class="admin-card mb-6 grid grid-cols-1 md:grid-cols-4 gap-3 items-center" x-data="{ period: '{{ $period }}' }">
+            <select name="period" x-model="period" class="input-field" @change="if (period !== 'custom') $el.form.submit()">
+                <option value="day">Today</option>
+                <option value="month">This Month</option>
+                <option value="year">This Year</option>
+                <option value="custom">Custom Range</option>
             </select>
-            <input type="month" name="month" value="{{ request('month', now()->format('Y-m')) }}" class="input-field">
-            <input type="number" name="year" value="{{ request('year', now()->year) }}" min="2000" max="{{ now()->year + 1 }}" class="input-field">
-            <input type="date" name="date_from" value="{{ request('date_from', $start->toDateString()) }}" class="input-field">
-            <input type="date" name="date_to" value="{{ request('date_to', $end->toDateString()) }}" class="input-field">
-            <div class="flex gap-2">
+            <input type="date" name="date_from" value="{{ request('date_from', $start->toDateString()) }}" class="input-field" x-show="period === 'custom'">
+            <input type="date" name="date_to" value="{{ request('date_to', $end->toDateString()) }}" class="input-field" x-show="period === 'custom'">
+            <div class="flex gap-2" x-show="period === 'custom'">
                 <button type="submit" class="btn-primary !py-2.5 !px-5 text-sm flex-1">Apply</button>
                 <a href="{{ route('admin.statistics.index') }}" class="btn-outline !py-2.5 !px-5 text-sm">Reset</a>
             </div>
@@ -28,13 +26,13 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
         @foreach([
-            ['label' => 'Paid Revenue', 'value' => shop_money($summary['paid_revenue']), 'icon' => 'currency', 'bg' => 'from-brand-500 to-brand-700'],
-            ['label' => 'Orders', 'value' => $summary['orders'], 'icon' => 'cart', 'bg' => 'from-blue-500 to-blue-700'],
-            ['label' => 'Average Order', 'value' => shop_money($summary['average_order'] ?? 0), 'icon' => 'chart', 'bg' => 'from-emerald-500 to-emerald-700'],
-            ['label' => 'New Customers', 'value' => $summary['new_customers'], 'icon' => 'users', 'bg' => 'from-violet-500 to-violet-700'],
+            ['label' => 'Paid Revenue', 'value' => shop_money($summary['paid_revenue']), 'icon' => 'currency', 'bg' => 'from-sage-500 to-sage-700'],
+            ['label' => 'Orders', 'value' => $summary['orders'], 'icon' => 'cart', 'bg' => 'from-charcoal-500 to-charcoal-700'],
+            ['label' => 'Average Order', 'value' => shop_money($summary['average_order'] ?? 0), 'icon' => 'chart', 'bg' => 'from-terracotta-400 to-terracotta-600'],
+            ['label' => 'New Customers', 'value' => $summary['new_customers'], 'icon' => 'users', 'bg' => 'from-oat-500 to-oat-700'],
         ] as $i => $card)
             <x-reveal type="fade-up" :delay="$i * 60">
-                <div class="admin-stat-card bg-gradient-to-br {{ $card['bg'] }} shadow-lg">
+                <div class="admin-stat-card h-full bg-gradient-to-br {{ $card['bg'] }} shadow-lg">
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-white/80 text-sm font-medium">{{ $card['label'] }}</span>
                         <x-icon :name="$card['icon']" class="w-6 h-6 text-white/90" />
@@ -47,13 +45,13 @@
 
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         @foreach([
-            ['label' => 'Active Products', 'value' => $summary['active_products'].' / '.$summary['products'], 'icon' => 'cube', 'bg' => 'bg-blue-100', 'text' => 'text-blue-700'],
+            ['label' => 'Active Products', 'value' => $summary['active_products'].' / '.$summary['products'], 'icon' => 'cube', 'bg' => 'bg-charcoal-100', 'text' => 'text-charcoal-700'],
             ['label' => 'Low Stock', 'value' => $summary['low_stock'], 'icon' => 'warning', 'bg' => 'bg-red-100', 'text' => 'text-red-700'],
-            ['label' => 'Messages', 'value' => $summary['messages'], 'icon' => 'mail', 'bg' => 'bg-purple-100', 'text' => 'text-purple-700'],
-            ['label' => 'Range', 'value' => $period, 'icon' => 'calendar', 'bg' => 'bg-slate-100', 'text' => 'text-slate-700'],
+            ['label' => 'Messages', 'value' => $summary['messages'], 'icon' => 'mail', 'bg' => 'bg-terracotta-50', 'text' => 'text-terracotta-600'],
+            ['label' => 'Range', 'value' => $period, 'icon' => 'calendar', 'bg' => 'bg-oat-100', 'text' => 'text-oat-700'],
         ] as $item)
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-card p-5">
-                <div class="flex items-center gap-3">
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-card p-5 h-full">
+                <div class="flex items-center gap-3 h-full">
                     <div class="w-11 h-11 rounded-xl {{ $item['bg'] }} {{ $item['text'] }} flex items-center justify-center">
                         <x-icon :name="$item['icon']" class="w-5 h-5" />
                     </div>
