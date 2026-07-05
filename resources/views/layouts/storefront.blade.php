@@ -26,12 +26,8 @@
     <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 md:h-20">
-                <a href="{{ route('home') }}" class="flex items-center gap-2.5 group">
-                    <img src="{{ asset('images/logo.png') }}" alt="{{ shop_name() }} logo" class="w-11 h-11 md:w-12 md:h-12 object-contain transition-transform duration-300 group-hover:scale-110">
-                    <div>
-                        <span class="text-xl font-bold text-charcoal-700">{{ shop_name() }}</span>
-                        <span class="hidden sm:block text-xs text-charcoal-500">Handmade yarn goods</span>
-                    </div>
+                <a href="{{ route('home') }}" class="flex items-center group">
+                    <img src="{{ asset('images/logo.png') }}" alt="{{ shop_name() }} logo" class="w-14 h-14 md:w-16 md:h-16 object-contain transition-transform duration-300 group-hover:scale-110">
                 </a>
 
                 <nav class="hidden md:flex items-center gap-8">
