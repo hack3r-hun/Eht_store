@@ -128,9 +128,8 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div class="md:col-span-2">
-                    <div class="flex items-center gap-2.5 mb-4">
-                        <img src="{{ asset('images/logo.png') }}" alt="{{ shop_name() }} logo" class="w-11 h-11 object-contain">
-                        <span class="text-xl font-bold text-charcoal-700">{{ shop_name() }}</span>
+                    <div class="mb-4">
+                        <img src="{{ asset('images/logo.png') }}" alt="{{ shop_name() }} logo" class="w-16 h-16 object-contain">
                     </div>
                     <p class="text-slate-500 max-w-md">{{ shop_config('tagline') }}</p>
                 </div>

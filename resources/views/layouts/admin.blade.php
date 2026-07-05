@@ -21,12 +21,8 @@
         <aside class="fixed md:static inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 shrink-0 flex flex-col shadow-sm transform transition-transform duration-300 md:translate-x-0"
                :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
             <div class="p-6 border-b border-slate-100">
-                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 group">
-                    <img src="{{ asset('images/logo.png') }}" alt="{{ shop_name() }} logo" class="w-11 h-11 object-contain transition-transform duration-300 group-hover:scale-110">
-                    <div>
-                        <span class="text-slate-900 font-bold text-lg block">{{ shop_name() }}</span>
-                        <span class="text-xs text-slate-500">Admin Panel</span>
-                    </div>
+                <a href="{{ route('admin.dashboard') }}" class="flex items-center justify-center group">
+                    <img src="{{ asset('images/logo.png') }}" alt="{{ shop_name() }} logo" class="w-16 h-16 object-contain transition-transform duration-300 group-hover:scale-110">
                 </a>
             </div>
 

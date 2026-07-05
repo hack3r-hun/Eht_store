@@ -13,9 +13,8 @@
 <body class="font-sans antialiased bg-gradient-to-br from-brand-50 via-white to-slate-50 text-slate-800">
     <x-toast-stack />
     <div class="min-h-screen flex flex-col sm:justify-center items-center px-4 py-12">
-        <a href="{{ route('home') }}" class="flex items-center gap-2 mb-8 group animate-fade-in-up">
-            <img src="{{ asset('images/logo.png') }}" alt="{{ shop_name() }} logo" class="w-14 h-14 object-contain transition-transform duration-300 group-hover:scale-110">
-            <span class="text-2xl font-bold text-slate-900">{{ shop_name() }}</span>
+        <a href="{{ route('home') }}" class="flex items-center mb-8 group animate-fade-in-up">
+            <img src="{{ asset('images/logo.png') }}" alt="{{ shop_name() }} logo" class="w-20 h-20 object-contain transition-transform duration-300 group-hover:scale-110">
         </a>
 
         <div class="w-full sm:max-w-md animate-fade-in-up animation-delay-100">
