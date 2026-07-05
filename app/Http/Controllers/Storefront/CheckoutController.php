@@ -10,7 +10,10 @@ use App\Models\Order;
 use App\Services\CartService;
 use App\Services\CheckoutService;
 use App\Services\PaymentService;
+use App\Services\ShippingService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class CheckoutController extends Controller
@@ -18,7 +21,8 @@ class CheckoutController extends Controller
     public function __construct(
         protected CartService $cartService,
         protected CheckoutService $checkoutService,
-        protected PaymentService $paymentService
+        protected PaymentService $paymentService,
+        protected ShippingService $shippingService
     ) {}
 
     public function index()
@@ -29,9 +33,27 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
         }
 
-        $totals = $this->checkoutService->calculateTotals();
+        $totals = $this->checkoutService->calculateTotals(old('city'));
 
         return view('storefront.checkout.index', compact('items', 'totals'));
+    }
+
+    public function shippingQuote(Request $request): JsonResponse
+    {
+        if ($this->cartService->items()->isEmpty()) {
+            return response()->json(['message' => 'Your cart is empty.'], 422);
+        }
+
+        $city = $request->string('city')->toString();
+        $totals = $this->checkoutService->calculateTotals($city);
+
+        return response()->json([
+            'shipping' => $totals['shipping'],
+            'shipping_label' => $totals['shipping'] > 0 ? shop_money($totals['shipping']) : 'Free',
+            'total' => $totals['total'],
+            'total_label' => shop_money($totals['total']),
+            'zone_label' => $this->shippingService->zoneLabel($city),
+        ]);
     }
 
     public function store(CheckoutRequest $request): RedirectResponse

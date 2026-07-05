@@ -19,7 +19,7 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'EK Yarn Admin',
                 'phone' => '+92 300 0000001',
-                'password' => Hash::make('password'),
+                'password' => Hash::make(env('SEED_ADMIN_PASSWORD', 'password')),
                 'email_verified_at' => now(),
             ]
         );
@@ -33,7 +33,7 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'Demo Customer',
                 'phone' => '+92 300 0000002',
-                'password' => Hash::make('password'),
+                'password' => Hash::make(env('SEED_CUSTOMER_PASSWORD', 'password')),
                 'email_verified_at' => now(),
             ]
         );

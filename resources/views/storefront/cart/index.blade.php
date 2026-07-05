@@ -53,9 +53,10 @@
                                 <div class="flex justify-between"><span class="text-slate-500">Tax</span><span class="font-medium">{{ shop_money($totals['tax']) }}</span></div>
                             @endif
                             <div class="flex justify-between">
-                                <span class="text-slate-500">Shipping</span>
+                                <span class="text-slate-500">Shipping (estimated)</span>
                                 <span class="font-medium">{{ $totals['shipping'] > 0 ? shop_money($totals['shipping']) : 'Free' }}</span>
                             </div>
+                            <p class="text-xs text-slate-400">Final shipping is calculated from your delivery city at checkout.</p>
                             <div class="border-t border-slate-100 pt-3 flex justify-between text-lg font-bold">
                                 <span>Total</span>
                                 <span class="text-sage-700">{{ shop_money($totals['total']) }}</span>

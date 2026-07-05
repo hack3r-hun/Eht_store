@@ -7,6 +7,16 @@ return [
     'currency_symbol' => env('SHOP_CURRENCY_SYMBOL', 'Rs.'),
     'tax_rate' => (float) env('SHOP_TAX_RATE', 0),
     'shipping_flat' => (float) env('SHOP_SHIPPING_FLAT', 250),
+    'shipping_local' => (float) env('SHOP_SHIPPING_LOCAL', 150),
+    'shipping_standard' => (float) env('SHOP_SHIPPING_STANDARD', 250),
+    'shipping_remote' => (float) env('SHOP_SHIPPING_REMOTE', 350),
+    'shipping_zones' => [
+        'local' => ['karachi'],
+        'standard' => [
+            'lahore', 'islamabad', 'rawalpindi', 'faisalabad', 'multan',
+            'hyderabad', 'peshawar', 'quetta', 'sialkot', 'gujranwala',
+        ],
+    ],
     'free_shipping_threshold' => (float) env('SHOP_FREE_SHIPPING_THRESHOLD', 5000),
     'low_stock_threshold' => (int) env('SHOP_LOW_STOCK', 5),
     'contact_email' => env('SHOP_CONTACT_EMAIL', 'hello@ekyarnco.local'),

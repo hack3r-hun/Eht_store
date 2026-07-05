@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Account' }} — {{ shop_name() }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,700&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -13,9 +14,7 @@
     <x-toast-stack />
     <div class="min-h-screen flex flex-col sm:justify-center items-center px-4 py-12">
         <a href="{{ route('home') }}" class="flex items-center gap-2 mb-8 group animate-fade-in-up">
-            <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center text-white transition-transform duration-300 group-hover:scale-110">
-                <x-icon name="bolt" class="w-6 h-6" />
-            </div>
+            <img src="{{ asset('images/logo.png') }}" alt="{{ shop_name() }} logo" class="w-14 h-14 object-contain transition-transform duration-300 group-hover:scale-110">
             <span class="text-2xl font-bold text-slate-900">{{ shop_name() }}</span>
         </a>
 

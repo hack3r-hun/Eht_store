@@ -78,6 +78,17 @@
         @apply store-grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6;
     }
 
+    /* Reveal wrappers inside product/content grids must stretch so every
+       card in a row renders at the same height. */
+    .grid > [data-reveal],
+    .store-grid > [data-reveal],
+    .store-grid-2 > [data-reveal],
+    .store-grid-3 > [data-reveal],
+    .store-grid-4 > [data-reveal],
+    .store-grid-6 > [data-reveal] {
+        @apply h-full;
+    }
+
     .input-field {
         @apply w-full rounded-xl border-oat-200 bg-white px-4 py-3 text-charcoal-700 shadow-sm transition duration-200 focus:border-sage-500 focus:ring-sage-500;
     }

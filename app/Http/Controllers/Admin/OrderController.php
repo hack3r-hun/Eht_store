@@ -93,6 +93,28 @@ class OrderController extends Controller
         return back()->with('success', 'Order status updated.');
     }
 
+    public function updateShipping(Request $request, Order $order): RedirectResponse
+    {
+        if ($order->payment_status === PaymentStatus::Paid) {
+            return back()->with('error', 'Shipping cannot be changed on a paid order.');
+        }
+
+        $data = $request->validate([
+            'shipping' => ['required', 'numeric', 'min:0', 'max:100000'],
+        ]);
+
+        $shipping = round((float) $data['shipping'], 2);
+        $total = round((float) $order->subtotal + (float) $order->tax + $shipping, 2);
+
+        $order->update(['shipping' => $shipping, 'total' => $total]);
+
+        if ($order->payment) {
+            $order->payment->update(['amount' => $total]);
+        }
+
+        return back()->with('success', 'Shipping charge updated and total recalculated.');
+    }
+
     public function destroy(Order $order): RedirectResponse
     {
         $orderNumber = $order->order_number;

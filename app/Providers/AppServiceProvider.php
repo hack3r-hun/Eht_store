@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -18,6 +19,12 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Password::defaults(function () {
+            return $this->app->environment('production')
+                ? Password::min(10)->letters()->mixedCase()->numbers()->symbols()->uncompromised()
+                : Password::min(8);
+        });
+
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
 

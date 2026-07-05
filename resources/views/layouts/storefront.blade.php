@@ -7,6 +7,8 @@
     <title>@yield('title', shop_name()) - {{ shop_config('tagline') }}</title>
     <meta name="description" content="@yield('meta_description', shop_config('tagline'))">
     <link rel="canonical" href="{{ url()->current() }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo.png') }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,700&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -17,9 +19,6 @@
     <div class="bg-charcoal-700 border-b border-charcoal-800 text-oat-100 text-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex flex-wrap items-center justify-between gap-2">
             <p>{{ shop_config('contact_phone') }} - {{ shop_config('contact_address') }}</p>
-            @if((float) shop_config('free_shipping_threshold', 0) > 0)
-                <p class="text-oat-100 font-medium">Nationwide delivery. Free delivery above {{ shop_money(shop_config('free_shipping_threshold')) }}</p>
-            @endif
         </div>
     </div>
 
@@ -27,10 +26,8 @@
     <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 md:h-20">
-                <a href="{{ route('home') }}" class="flex items-center gap-2 group">
-                    <div class="w-10 h-10 rounded-xl bg-terracotta-500 flex items-center justify-center text-white font-black tracking-tight transition-transform duration-300 group-hover:scale-110">
-                        EK
-                    </div>
+                <a href="{{ route('home') }}" class="flex items-center gap-2.5 group">
+                    <img src="{{ asset('images/logo.png') }}" alt="{{ shop_name() }} logo" class="w-11 h-11 md:w-12 md:h-12 object-contain transition-transform duration-300 group-hover:scale-110">
                     <div>
                         <span class="text-xl font-bold text-charcoal-700">{{ shop_name() }}</span>
                         <span class="hidden sm:block text-xs text-charcoal-500">Handmade yarn goods</span>
@@ -66,7 +63,7 @@
                         </div>
                     @else
                         <a href="{{ route('login') }}" class="hidden sm:inline text-sm font-medium text-charcoal-600 hover:text-sage-700 transition-colors">Login</a>
-                        <a href="{{ route('register') }}" class="btn-primary !py-2 !px-4 text-sm">Create Account</a>
+                        <a href="{{ route('register') }}" class="btn-primary !py-2 !px-4 text-sm hidden sm:inline-block">Create Account</a>
                     @endauth
 
                     <button @click="mobileOpen = !mobileOpen" class="md:hidden p-2 rounded-lg hover:bg-slate-100">
@@ -135,10 +132,8 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div class="md:col-span-2">
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="w-10 h-10 rounded-xl bg-oat-100 text-terracotta-500 flex items-center justify-center">
-                            <span class="text-sm font-black">EK</span>
-                        </div>
+                    <div class="flex items-center gap-2.5 mb-4">
+                        <img src="{{ asset('images/logo.png') }}" alt="{{ shop_name() }} logo" class="w-11 h-11 object-contain">
                         <span class="text-xl font-bold text-charcoal-700">{{ shop_name() }}</span>
                     </div>
                     <p class="text-slate-500 max-w-md">{{ shop_config('tagline') }}</p>

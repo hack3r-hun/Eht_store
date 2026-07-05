@@ -15,9 +15,14 @@
                         </div>
                     @endforeach
                 </div>
-                <div class="mt-4 pt-4 border-t flex justify-between font-bold">
-                    <span>Total</span>
-                    <span class="text-brand-700">{{ shop_money($order->total) }}</span>
+                <div class="mt-4 pt-4 border-t space-y-2 text-sm">
+                    <div class="flex justify-between"><span class="text-slate-500">Subtotal</span><span>{{ shop_money($order->subtotal) }}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Tax</span><span>{{ shop_money($order->tax) }}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Shipping</span><span>{{ $order->shipping > 0 ? shop_money($order->shipping) : 'Free' }}</span></div>
+                    <div class="flex justify-between font-bold text-base pt-2 border-t border-slate-50">
+                        <span>Total</span>
+                        <span class="text-brand-700">{{ shop_money($order->total) }}</span>
+                    </div>
                 </div>
             </div>
 
@@ -49,6 +54,19 @@
                     </select>
                     <button type="submit" class="btn-primary w-full">Update</button>
                 </form>
+            </div>
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-card p-6">
+                <h2 class="font-semibold mb-4">Shipping Charge</h2>
+                @if($order->payment_status === \App\Enums\PaymentStatus::Paid)
+                    <p class="text-sm text-slate-500">This order is already paid — the shipping charge can no longer be changed.</p>
+                @else
+                    <form action="{{ route('admin.orders.shipping', $order) }}" method="POST" class="space-y-3">
+                        @csrf @method('PATCH')
+                        <input type="number" step="0.01" min="0" name="shipping" value="{{ old('shipping', $order->shipping) }}" class="input-field" required>
+                        <p class="text-xs text-slate-500">Overrides the auto-calculated charge; the order total is recalculated.</p>
+                        <button type="submit" class="btn-outline w-full">Update Shipping</button>
+                    </form>
+                @endif
             </div>
             <a href="{{ route('admin.orders.invoice', $order) }}" target="_blank" class="btn-outline w-full text-center block">Print Invoice</a>
 

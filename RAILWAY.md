@@ -57,6 +57,8 @@ php artisan key:generate --show
 | `SHOP_TAGLINE` | `Handcrafted crochet, knitted gifts, and cozy yarn creations` |
 | `SHOP_CONTACT_ADDRESS` | `Karachi, Pakistan` |
 | `RUN_SEEDER` | `true` on first deploy only |
+| `SEED_ADMIN_PASSWORD` | strong password for the admin account (applied on every deploy) |
+| `SEED_CUSTOMER_PASSWORD` | strong password for the demo customer account |
 
 After the first successful deploy, set `RUN_SEEDER=false`.
 
@@ -74,8 +76,8 @@ https://YOUR-APP.up.railway.app/webhooks/stripe
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | `admin@ekyarnco.local` | `password` |
-| Customer | `customer@ekyarnco.local` | `password` |
+| Admin | `admin@ekyarnco.local` | set via `SEED_ADMIN_PASSWORD` env var |
+| Customer | `customer@ekyarnco.local` | set via `SEED_CUSTOMER_PASSWORD` env var |
 
 ## Uploaded Images
 

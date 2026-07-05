@@ -19,15 +19,27 @@
                     <input type="text" name="{{ $key }}" value="{{ old($key, $settings[$key]) }}" class="input-field">
                 </div>
             @endforeach
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium mb-2">Tax Rate (%)</label>
-                    <input type="number" step="0.01" name="tax_rate" value="{{ old('tax_rate', $settings['tax_rate']) }}" class="input-field">
+            <div>
+                <label class="block text-sm font-medium mb-2">Tax Rate (%)</label>
+                <input type="number" step="0.01" name="tax_rate" value="{{ old('tax_rate', $settings['tax_rate']) }}" class="input-field">
+            </div>
+            <div>
+                <p class="block text-sm font-semibold mb-2">Shipping Charges (by delivery zone)</p>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Karachi (Local)</label>
+                        <input type="number" step="0.01" name="shipping_local" value="{{ old('shipping_local', $settings['shipping_local']) }}" class="input-field">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Major Cities</label>
+                        <input type="number" step="0.01" name="shipping_standard" value="{{ old('shipping_standard', $settings['shipping_standard']) }}" class="input-field">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Rest of Pakistan</label>
+                        <input type="number" step="0.01" name="shipping_remote" value="{{ old('shipping_remote', $settings['shipping_remote']) }}" class="input-field">
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Flat Shipping</label>
-                    <input type="number" step="0.01" name="shipping_flat" value="{{ old('shipping_flat', $settings['shipping_flat']) }}" class="input-field">
-                </div>
+                <p class="text-xs text-slate-500 mt-1">Auto-applied at checkout from the customer's city. Major cities: Lahore, Islamabad, Rawalpindi, Faisalabad, Multan, Hyderabad, Peshawar, Quetta, Sialkot, Gujranwala.</p>
             </div>
             <div>
                 <label class="block text-sm font-medium mb-2">Free Shipping Above</label>

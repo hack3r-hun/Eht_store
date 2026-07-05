@@ -72,8 +72,8 @@ SHOP_SHIPPING_FLAT=250
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | admin@ekyarnco.local | password |
-| Customer | customer@ekyarnco.local | password |
+| Admin | admin@ekyarnco.local | set via `SEED_ADMIN_PASSWORD` |
+| Customer | customer@ekyarnco.local | set via `SEED_CUSTOMER_PASSWORD` |
 
 ## Running Tests
 

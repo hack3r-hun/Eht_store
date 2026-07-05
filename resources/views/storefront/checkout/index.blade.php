@@ -21,7 +21,24 @@
             action="{{ route('checkout.store') }}"
             method="POST"
             class="grid grid-cols-1 lg:grid-cols-3 gap-8"
-            x-data="{ submitting: false }"
+            x-data="{
+                submitting: false,
+                shippingLabel: '{{ $totals['shipping'] > 0 ? shop_money($totals['shipping']) : 'Free' }}',
+                totalLabel: '{{ shop_money($totals['total']) }}',
+                zoneLabel: '',
+                quote(city) {
+                    if (!city.trim()) { return; }
+                    fetch('{{ route('checkout.shipping-quote') }}?city=' + encodeURIComponent(city), { headers: { 'Accept': 'application/json' } })
+                        .then(response => response.ok ? response.json() : null)
+                        .then(data => {
+                            if (!data) { return; }
+                            this.shippingLabel = data.shipping_label;
+                            this.totalLabel = data.total_label;
+                            this.zoneLabel = data.zone_label;
+                        })
+                        .catch(() => {});
+                }
+            }"
             @submit="if (submitting) { $event.preventDefault(); return; } submitting = true"
         >
             @csrf
@@ -48,8 +65,9 @@
                         @endguest
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-2">City *</label>
-                            <input type="text" name="city" value="{{ old('city') }}" required class="input-field">
+                            <input type="text" name="city" value="{{ old('city') }}" required class="input-field" placeholder="e.g. Karachi, Lahore" @input.debounce.400ms="quote($event.target.value)">
                             @error('city')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
+                            <p class="text-xs text-sage-700 mt-1" x-show="zoneLabel" x-cloak x-text="zoneLabel"></p>
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-slate-700 mb-2">Address *</label>
@@ -107,10 +125,11 @@
                     <div class="space-y-2 text-sm border-t border-slate-100 pt-4">
                         <div class="flex justify-between"><span class="text-slate-500">Subtotal</span><span>{{ shop_money($totals['subtotal']) }}</span></div>
                         <div class="flex justify-between"><span class="text-slate-500">Tax</span><span>{{ shop_money($totals['tax']) }}</span></div>
-                        <div class="flex justify-between"><span class="text-slate-500">Shipping</span><span>{{ $totals['shipping'] > 0 ? shop_money($totals['shipping']) : 'Free' }}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">Shipping</span><span x-text="shippingLabel">{{ $totals['shipping'] > 0 ? shop_money($totals['shipping']) : 'Free' }}</span></div>
+                        <p class="text-xs text-slate-400">Shipping is calculated from your delivery city.</p>
                         <div class="flex justify-between text-lg font-bold pt-2">
                             <span>Total</span>
-                            <span class="text-sage-700">{{ shop_money($totals['total']) }}</span>
+                            <span class="text-sage-700" x-text="totalLabel">{{ shop_money($totals['total']) }}</span>
                         </div>
                     </div>
                     <button type="submit" class="btn-primary w-full mt-6" :disabled="submitting" :class="submitting && 'opacity-60 cursor-not-allowed'">

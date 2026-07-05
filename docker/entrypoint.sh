@@ -32,6 +32,7 @@ php artisan optimize:clear --quiet 2>/dev/null || php artisan config:clear
 
 echo "Running migrations..."
 php artisan migrate --force --no-interaction
+php artisan accounts:sync-passwords --no-interaction || true
 
 if [ "$RUN_SEEDER" = "true" ]; then
     echo "Seeding database..."
