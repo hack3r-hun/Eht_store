@@ -23,13 +23,13 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
         @foreach([
-            ['label' => 'Total Revenue', 'value' => shop_money($stats['revenue']), 'gradient' => 'from-brand-500 to-brand-700', 'icon' => 'currency'],
-            ['label' => 'Total Orders', 'value' => $stats['total_orders'], 'gradient' => 'from-indigo-500 to-indigo-700', 'icon' => 'cart'],
-            ['label' => 'Orders Today', 'value' => $stats['orders_today'], 'gradient' => 'from-violet-500 to-violet-700', 'icon' => 'calendar'],
-            ['label' => 'Customers', 'value' => $stats['total_customers'], 'gradient' => 'from-emerald-500 to-emerald-700', 'icon' => 'users'],
+            ['label' => 'Total Revenue', 'value' => shop_money($stats['revenue']), 'gradient' => 'from-sage-500 to-sage-700', 'icon' => 'currency'],
+            ['label' => 'Total Orders', 'value' => $stats['total_orders'], 'gradient' => 'from-charcoal-500 to-charcoal-700', 'icon' => 'cart'],
+            ['label' => 'Orders Today', 'value' => $stats['orders_today'], 'gradient' => 'from-terracotta-400 to-terracotta-600', 'icon' => 'calendar'],
+            ['label' => 'Customers', 'value' => $stats['total_customers'], 'gradient' => 'from-oat-500 to-oat-700', 'icon' => 'users'],
         ] as $i => $card)
             <x-reveal type="fade-up" :delay="$i * 80">
-                <div class="admin-stat-card bg-gradient-to-br {{ $card['gradient'] }} shadow-lg">
+                <div class="admin-stat-card h-full bg-gradient-to-br {{ $card['gradient'] }} shadow-lg">
                     <div class="relative z-10">
                         <div class="flex items-center justify-between mb-3">
                             <span class="text-white/80 text-sm font-medium">{{ $card['label'] }}</span>
@@ -42,17 +42,17 @@
         @endforeach
     </div>
 
-    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
         @foreach([
-            ['label' => 'Pending Orders', 'value' => $stats['pending_orders'], 'bg' => 'bg-brand-100', 'text' => 'text-brand-700', 'icon' => 'clock'],
-            ['label' => 'Products', 'value' => $stats['active_products'].' / '.$stats['total_products'], 'bg' => 'bg-blue-100', 'text' => 'text-blue-700', 'icon' => 'cube'],
-            ['label' => 'Archived', 'value' => $stats['archived_products'], 'bg' => 'bg-slate-100', 'text' => 'text-slate-700', 'icon' => 'inbox'],
-            ['label' => 'Unread Messages', 'value' => $stats['unread_messages'], 'bg' => 'bg-purple-100', 'text' => 'text-purple-700', 'icon' => 'mail'],
+            ['label' => 'Pending Orders', 'value' => $stats['pending_orders'], 'bg' => 'bg-sage-100', 'text' => 'text-sage-700', 'icon' => 'clock'],
+            ['label' => 'Products', 'value' => $stats['active_products'].' / '.$stats['total_products'], 'bg' => 'bg-charcoal-100', 'text' => 'text-charcoal-700', 'icon' => 'cube'],
+            ['label' => 'Archived', 'value' => $stats['archived_products'], 'bg' => 'bg-oat-100', 'text' => 'text-oat-700', 'icon' => 'inbox'],
+            ['label' => 'Unread Messages', 'value' => $stats['unread_messages'], 'bg' => 'bg-terracotta-50', 'text' => 'text-terracotta-600', 'icon' => 'mail'],
             ['label' => 'Low Stock', 'value' => $stats['low_stock'], 'bg' => 'bg-red-100', 'text' => 'text-red-700', 'icon' => 'warning'],
         ] as $i => $item)
             <x-reveal type="scale" :delay="$i * 60">
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-card p-5 card-hover group">
-                    <div class="flex items-center gap-3">
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-card p-5 card-hover group h-full">
+                    <div class="flex items-center gap-3 h-full">
                         <div class="w-11 h-11 rounded-xl {{ $item['bg'] }} {{ $item['text'] }} flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                             <x-icon :name="$item['icon']" class="w-5 h-5" />
                         </div>
@@ -96,7 +96,7 @@
                                         <span class="inline-block mt-1 text-xs font-semibold px-2 py-0.5 rounded-full
                                             @if($order->status->value === 'delivered') bg-green-100 text-green-700
                                             @elseif(in_array($order->status->value, ['pending', 'awaiting_cod'])) bg-brand-100 text-brand-700
-                                            @else bg-blue-100 text-blue-700 @endif">
+                                            @else bg-charcoal-100 text-charcoal-700 @endif">
                                             {{ $order->status->label() }}
                                         </span>
                                     </div>
