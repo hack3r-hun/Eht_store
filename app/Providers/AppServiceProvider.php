@@ -2,9 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Order;
+use App\Policies\OrderPolicy;
 use App\Services\CartService;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -19,6 +22,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Gate::policy(Order::class, OrderPolicy::class);
+
         Password::defaults(function () {
             return $this->app->environment('production')
                 ? Password::min(10)->letters()->mixedCase()->numbers()->symbols()->uncompromised()

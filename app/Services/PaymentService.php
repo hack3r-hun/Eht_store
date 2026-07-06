@@ -31,6 +31,21 @@ class PaymentService
      *
      * @throws ApiErrorException
      */
+    /**
+     * @return array{client_secret: string, payment_intent_id: string}
+     *
+     * @throws ApiErrorException
+     */
+    public function createPaymentIntentForApi(Order $order): array
+    {
+        return $this->createPaymentIntent($order);
+    }
+
+    /**
+     * @return array{client_secret: string, payment_intent_id: string}
+     *
+     * @throws ApiErrorException
+     */
     public function createPaymentIntent(Order $order): array
     {
         $intent = PaymentIntent::create([

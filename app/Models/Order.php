@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Order extends Model
 {
+    public ?string $plain_guest_access_token_for_api = null;
+
     protected $fillable = [
         'user_id',
         'guest_access_token',

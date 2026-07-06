@@ -32,7 +32,9 @@ return [
         'Gift' => 'https://images.unsplash.com/photo-1606328252399-393f9bb6cad4?auto=format&fit=crop&w=800&h=800&q=70',
     ],
 
-    'about_store' => 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?auto=format&fit=crop&w=900&h=600&q=70',
+    'hero' => 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?auto=format&fit=crop&w=1000&h=800&q=75',
+
+    'about_store' => 'https://images.unsplash.com/photo-1595341595379-cf1cb694ea1f?auto=format&fit=crop&w=900&h=600&q=70',
 
     'team' => [
         'maker' => 'https://images.unsplash.com/photo-1591004947588-a9ea6a85cefe?auto=format&fit=crop&w=400&h=400&q=70',

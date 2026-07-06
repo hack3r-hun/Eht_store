@@ -5,9 +5,9 @@
 @section('content')
     @php $homeMeta = \App\Models\Page::where('slug', 'home')->first()?->meta ?? []; @endphp
 
-    <section class="relative overflow-hidden bg-gradient-to-br from-oat-100 via-white to-sage-50 min-h-[78vh] flex items-center border-b border-oat-200">
+    <section class="relative overflow-hidden bg-gradient-to-br from-oat-100 via-white to-sage-50 border-b border-oat-200">
         <div class="absolute inset-x-0 bottom-0 h-24 bg-mesh opacity-60 pointer-events-none"></div>
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20 w-full">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 <div>
                     <x-reveal type="fade-up">
@@ -25,18 +25,18 @@
                     </x-reveal>
                 </div>
                 <x-reveal type="fade-left" delay="200" class="hidden lg:block">
-                    <div class="grid grid-cols-2 gap-4">
-                        @foreach([
-                            ['icon' => 'heart', 'label' => 'Amigurumi & Plushies', 'bg' => 'bg-white border-oat-200'],
-                            ['icon' => 'gift', 'label' => 'Custom Gifts', 'bg' => 'bg-sage-50 border-sage-100'],
-                            ['icon' => 'sparkles', 'label' => 'Accessories', 'bg' => 'bg-oat-100 border-oat-200'],
-                            ['icon' => 'shield', 'label' => 'Quality Yarn', 'bg' => 'bg-white border-oat-200'],
-                        ] as $i => $card)
-                            <div class="p-6 rounded-2xl {{ $card['bg'] }} border card-hover {{ $i % 2 === 1 ? 'mt-8' : '' }}">
-                                <x-icon :name="$card['icon']" class="w-10 h-10 text-terracotta-500 mb-3" />
-                                <p class="text-sm font-semibold text-charcoal-700">{{ $card['label'] }}</p>
+                    <div class="relative">
+                        <div class="rounded-3xl overflow-hidden border border-oat-200 shadow-soft">
+                            <img src="{{ config('media.hero') }}" alt="Colorful yarns and crochet hooks at {{ shop_name() }}" class="w-full h-[480px] object-cover" fetchpriority="high">
+                        </div>
+                        <div class="absolute -top-4 right-6 bg-sage-600 text-white rounded-xl shadow-lg px-4 py-2 text-sm font-semibold">Custom Orders Welcome</div>
+                        <div class="absolute -bottom-6 left-6 bg-white rounded-2xl shadow-xl border border-oat-200 px-5 py-4 flex items-center gap-3">
+                            <span class="w-10 h-10 rounded-xl bg-terracotta-500 text-white flex items-center justify-center"><x-icon name="heart" class="w-5 h-5" /></span>
+                            <div>
+                                <p class="font-bold text-charcoal-700 text-sm">100% Handmade</p>
+                                <p class="text-xs text-charcoal-500">Made with care in Karachi</p>
                             </div>
-                        @endforeach
+                        </div>
                     </div>
                 </x-reveal>
             </div>

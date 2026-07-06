@@ -92,7 +92,11 @@ class CheckoutService
             if (! Auth::id()) {
                 $guestToken = Str::random(40);
                 $order->update(['guest_access_token' => hash('sha256', $guestToken)]);
-                session()->put("guest_order_access.{$order->id}", $guestToken);
+                $order->plain_guest_access_token_for_api = $guestToken;
+
+                if (request()->hasSession()) {
+                    session()->put("guest_order_access.{$order->id}", $guestToken);
+                }
             }
 
             foreach ($items as $item) {

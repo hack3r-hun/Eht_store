@@ -38,9 +38,9 @@ class CartController extends Controller
             return back()->with('error', 'This product is out of stock.');
         }
 
-        $clamped = $this->cartService->add($product, (int) ($request->quantity ?? 1));
+        $result = $this->cartService->add($product, (int) ($request->quantity ?? 1));
 
-        if ($clamped) {
+        if ($result['clamped']) {
             return back()->with('info', "{$product->name} added — only {$product->stock_quantity} in stock, so the quantity was adjusted.");
         }
 
@@ -50,9 +50,13 @@ class CartController extends Controller
     public function update(Request $request, CartItem $cartItem): RedirectResponse
     {
         $request->validate(['quantity' => ['required', 'integer', 'min:0']]);
-        $clamped = $this->cartService->update($cartItem, (int) $request->quantity);
+        $result = $this->cartService->update($cartItem, (int) $request->quantity);
 
-        if ($clamped) {
+        if ($result['removed']) {
+            return back()->with('success', 'Item removed from cart.');
+        }
+
+        if ($result['clamped']) {
             return back()->with('info', "Only {$cartItem->product->stock_quantity} in stock — quantity adjusted.");
         }
 

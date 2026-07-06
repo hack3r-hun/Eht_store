@@ -1,0 +1,54 @@
+<?php
+
+namespace App\Http\Controllers\Api\V1\Admin;
+
+use App\Http\Controllers\Api\V1\ApiController;
+use App\Models\Setting;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class SettingController extends ApiController
+{
+    public function show(): JsonResponse
+    {
+        return $this->success($this->settingsArray());
+    }
+
+    public function update(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'shop_name' => ['required', 'string', 'max:255'],
+            'shop_tagline' => ['nullable', 'string', 'max:500'],
+            'tax_rate' => ['nullable', 'numeric', 'min:0'],
+            'shipping_local' => ['nullable', 'numeric', 'min:0'],
+            'shipping_standard' => ['nullable', 'numeric', 'min:0'],
+            'shipping_remote' => ['nullable', 'numeric', 'min:0'],
+            'free_shipping_threshold' => ['nullable', 'numeric', 'min:0'],
+            'contact_email' => ['nullable', 'email'],
+            'contact_phone' => ['nullable', 'string', 'max:30'],
+            'contact_address' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        foreach ($data as $key => $value) {
+            Setting::set($key, $value);
+        }
+
+        return $this->success($this->settingsArray());
+    }
+
+    protected function settingsArray(): array
+    {
+        return [
+            'shop_name' => Setting::get('shop_name', config('shop.name')),
+            'shop_tagline' => Setting::get('shop_tagline', config('shop.tagline')),
+            'tax_rate' => Setting::get('tax_rate', config('shop.tax_rate')),
+            'shipping_local' => Setting::get('shipping_local', config('shop.shipping_local')),
+            'shipping_standard' => Setting::get('shipping_standard', Setting::get('shipping_flat', config('shop.shipping_standard'))),
+            'shipping_remote' => Setting::get('shipping_remote', config('shop.shipping_remote')),
+            'free_shipping_threshold' => Setting::get('free_shipping_threshold', config('shop.free_shipping_threshold')),
+            'contact_email' => Setting::get('contact_email', config('shop.contact_email')),
+            'contact_phone' => Setting::get('contact_phone', config('shop.contact_phone')),
+            'contact_address' => Setting::get('contact_address', config('shop.contact_address')),
+        ];
+    }
+}

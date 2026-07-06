@@ -30,17 +30,20 @@
                     </div>
                 </x-reveal>
                 <x-reveal type="fade-left" delay="150">
-                    <div class="relative rounded-3xl overflow-hidden shadow-soft border border-oat-200 bg-oat-100 p-8">
-                        <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <div class="rounded-3xl overflow-hidden border border-oat-200 shadow-soft">
+                            <img src="{{ config('media.about_store') }}" alt="Quality yarns and crochet hook at {{ shop_name() }}" class="w-full h-72 md:h-80 object-cover" loading="lazy">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-6">
                             @foreach([
                                 ['icon' => 'heart', 'label' => 'Crochet'],
                                 ['icon' => 'sparkles', 'label' => 'Accessories'],
                                 ['icon' => 'gift', 'label' => 'Custom Gifts'],
                                 ['icon' => 'truck', 'label' => 'Nationwide Delivery'],
                             ] as $item)
-                                <div class="rounded-2xl bg-white border border-oat-200 p-6 text-center shadow-card">
-                                    <x-icon :name="$item['icon']" class="w-8 h-8 mx-auto text-terracotta-500 mb-3" />
-                                    <p class="font-semibold text-charcoal-700">{{ $item['label'] }}</p>
+                                <div class="flex items-center gap-3 rounded-2xl bg-white border border-oat-200 p-4 shadow-card">
+                                    <x-icon :name="$item['icon']" class="w-6 h-6 shrink-0 text-terracotta-500" />
+                                    <p class="font-semibold text-charcoal-700 text-sm">{{ $item['label'] }}</p>
                                 </div>
                             @endforeach
                         </div>

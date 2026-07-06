@@ -19,6 +19,7 @@
     <div class="bg-charcoal-700 border-b border-charcoal-800 text-oat-100 text-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex flex-wrap items-center justify-between gap-2">
             <p>{{ shop_config('contact_phone') }} - {{ shop_config('contact_address') }}</p>
+            <p class="hidden sm:block text-oat-100/90 font-medium">Handmade with love in Karachi</p>
         </div>
     </div>
 

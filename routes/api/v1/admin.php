@@ -1,0 +1,43 @@
+<?php
+
+use App\Http\Controllers\Api\V1\Admin\CategoryController;
+use App\Http\Controllers\Api\V1\Admin\ContactMessageController;
+use App\Http\Controllers\Api\V1\Admin\CustomerController;
+use App\Http\Controllers\Api\V1\Admin\DashboardController;
+use App\Http\Controllers\Api\V1\Admin\OrderController;
+use App\Http\Controllers\Api\V1\Admin\PageController;
+use App\Http\Controllers\Api\V1\Admin\ProductController;
+use App\Http\Controllers\Api\V1\Admin\SettingController;
+use App\Http\Controllers\Api\V1\Admin\StatisticsController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('statistics', [StatisticsController::class, 'index'])->name('statistics.index');
+
+Route::apiResource('categories', CategoryController::class);
+Route::delete('products/bulk-destroy', [ProductController::class, 'bulkDestroy'])->name('products.bulk-destroy');
+Route::get('products/archived', [ProductController::class, 'archived'])->name('products.archived');
+Route::post('products/{product}/restore', [ProductController::class, 'restore'])->name('products.restore');
+Route::delete('products/{product}/images/{image}', [ProductController::class, 'destroyImage'])->name('products.images.destroy');
+Route::apiResource('products', ProductController::class);
+
+Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+Route::delete('orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
+Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
+Route::patch('orders/{order}/shipping', [OrderController::class, 'updateShipping'])->name('orders.shipping');
+Route::get('orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
+
+Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
+
+Route::get('messages', [ContactMessageController::class, 'index'])->name('messages.index');
+Route::get('messages/{message}', [ContactMessageController::class, 'show'])->name('messages.show');
+Route::post('messages/{message}/reply', [ContactMessageController::class, 'reply'])->name('messages.reply');
+Route::delete('messages/{message}', [ContactMessageController::class, 'destroy'])->name('messages.destroy');
+
+Route::get('pages', [PageController::class, 'index'])->name('pages.index');
+Route::get('pages/{page}', [PageController::class, 'show'])->name('pages.show');
+Route::put('pages/{page}', [PageController::class, 'update'])->name('pages.update');
+
+Route::get('settings', [SettingController::class, 'show'])->name('settings.show');
+Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
