@@ -8,7 +8,7 @@
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,700&display=swap" rel="stylesheet" />
-    @vite(['resources/css/app.css', 'resources/js/admin.js', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/admin.js'])
 </head>
 <body class="font-sans antialiased bg-slate-50 admin-layout" x-data="{ sidebarOpen: false }" data-scroll-reveal="off">
     <x-toast-stack />
@@ -18,11 +18,15 @@
         <div x-show="sidebarOpen" x-transition.opacity @click="sidebarOpen = false" class="fixed inset-0 bg-slate-900/30 z-40 md:hidden" x-cloak></div>
 
         {{-- Sidebar --}}
-        <aside class="fixed md:static inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 shrink-0 flex flex-col shadow-sm transform transition-transform duration-300 md:translate-x-0"
+        <aside class="fixed md:static inset-y-0 left-0 z-50 w-64 lg:w-72 bg-white border-r border-slate-200 shrink-0 flex flex-col transform transition-transform duration-300 md:translate-x-0"
                :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
-            <div class="p-6 border-b border-slate-100">
-                <a href="{{ route('admin.dashboard') }}" class="flex items-center justify-center group">
-                    <img src="{{ asset('images/logo.png') }}" alt="{{ shop_name() }} logo" class="w-16 h-16 object-contain transition-transform duration-300 group-hover:scale-110">
+            <div class="px-5 py-5 border-b border-slate-100">
+                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 group">
+                    <img src="{{ asset('images/logo.png') }}" alt="{{ shop_name() }} logo" class="w-11 h-11 object-contain transition-transform duration-300 group-hover:scale-105">
+                    <div class="min-w-0">
+                        <p class="text-sm font-bold text-slate-900 truncate">{{ shop_name() }}</p>
+                        <p class="text-xs text-slate-500">Admin console</p>
+                    </div>
                 </a>
             </div>
 
@@ -31,11 +35,11 @@
                     $links = [
                         ['route' => 'admin.dashboard', 'label' => 'Dashboard', 'match' => 'admin.dashboard', 'icon' => 'home'],
                         ['route' => 'admin.statistics.index', 'label' => 'Statistics', 'match' => 'admin.statistics.*', 'icon' => 'chart'],
-                        ['route' => 'admin.products.index', 'label' => 'Products', 'match' => 'admin.products.*', 'icon' => 'cube'],
+                        ['route' => 'admin.products.index', 'label' => 'Products', 'match' => 'admin.products.*', 'icon' => 'cube', 'badge' => $sidebarBadges['low_stock'] ?? 0, 'badgeTone' => 'amber'],
                         ['route' => 'admin.categories.index', 'label' => 'Categories', 'match' => 'admin.categories.*', 'icon' => 'folder'],
-                        ['route' => 'admin.orders.index', 'label' => 'Orders', 'match' => 'admin.orders.*', 'icon' => 'cart'],
+                        ['route' => 'admin.orders.index', 'label' => 'Orders', 'match' => 'admin.orders.*', 'icon' => 'cart', 'badge' => $sidebarBadges['pending_orders'] ?? 0, 'badgeTone' => 'sage'],
                         ['route' => 'admin.customers.index', 'label' => 'Customers', 'match' => 'admin.customers.*', 'icon' => 'users'],
-                        ['route' => 'admin.messages.index', 'label' => 'Messages', 'match' => 'admin.messages.*', 'icon' => 'mail'],
+                        ['route' => 'admin.messages.index', 'label' => 'Messages', 'match' => 'admin.messages.*', 'icon' => 'mail', 'badge' => $sidebarBadges['unread_messages'] ?? 0, 'badgeTone' => 'terracotta'],
                         ['route' => 'admin.pages.index', 'label' => 'CMS Pages', 'match' => 'admin.pages.*', 'icon' => 'document'],
                         ['route' => 'admin.settings.index', 'label' => 'Settings', 'match' => 'admin.settings.*', 'icon' => 'cog'],
                     ];
@@ -44,13 +48,20 @@
                     <a href="{{ route($link['route']) }}"
                        class="admin-sidebar-link {{ request()->routeIs($link['match']) ? 'admin-sidebar-link-active' : 'admin-sidebar-link-inactive' }}">
                         <x-icon :name="$link['icon']" class="w-5 h-5 shrink-0" />
-                        {{ $link['label'] }}
+                        <span class="flex-1">{{ $link['label'] }}</span>
+                        @if(($link['badge'] ?? 0) > 0)
+                            <span class="admin-badge {{ match ($link['badgeTone'] ?? null) {
+                                'amber' => 'bg-amber-100 text-amber-700',
+                                'terracotta' => 'bg-terracotta-100 text-terracotta-700',
+                                default => 'bg-sage-100 text-sage-700',
+                            } }}">{{ $link['badge'] }}</span>
+                        @endif
                     </a>
                 @endforeach
 
                 <div class="pt-4 mt-4 border-t border-slate-100">
                     <a href="{{ route('home') }}" target="_blank"
-                       class="admin-sidebar-link admin-sidebar-link-inactive text-brand-600">
+                       class="admin-sidebar-link admin-sidebar-link-inactive text-sage-600">
                         <x-icon name="globe" class="w-5 h-5 shrink-0" /> View Store
                     </a>
                 </div>
@@ -58,7 +69,7 @@
 
             <div class="p-4 border-t border-slate-100">
                 <div class="flex items-center gap-3 px-3 py-2 mb-3">
-                    <div class="w-9 h-9 rounded-full bg-brand-600 flex items-center justify-center text-white text-sm font-bold">
+                    <div class="w-9 h-9 rounded-full bg-sage-600 flex items-center justify-center text-white text-sm font-bold">
                         {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                     </div>
                     <div class="min-w-0">
@@ -76,10 +87,10 @@
         </aside>
 
         <div class="flex-1 min-w-0 flex flex-col">
-            <header class="bg-white border-b border-slate-200 px-4 md:px-6 py-4 sticky top-0 z-30">
+            <header class="bg-white/95 backdrop-blur border-b border-slate-200 px-4 md:px-6 py-3.5 sticky top-0 z-30">
                 <div class="flex items-center justify-between gap-4">
-                    <div class="flex items-center gap-3">
-                        <button @click="sidebarOpen = !sidebarOpen" class="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <button @click="sidebarOpen = !sidebarOpen" class="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600" aria-label="Open menu">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                         </button>
                         @unless(request()->routeIs('admin.dashboard'))
@@ -103,18 +114,18 @@
                                 icon-only
                             />
                         @endunless
-                        <div>
-                            <p class="text-xs font-semibold text-brand-600 uppercase tracking-wider mb-0.5">Admin</p>
-                            <h1 class="text-xl md:text-2xl font-bold text-slate-900">@yield('page-title', 'Dashboard')</h1>
+                        <div class="min-w-0">
+                            <p class="text-[11px] font-semibold text-sage-700 uppercase tracking-wider mb-0.5">Admin</p>
+                            <h1 class="text-lg md:text-xl font-bold text-slate-900 truncate">@yield('page-title', 'Dashboard')</h1>
                         </div>
                     </div>
-                    <div class="text-sm text-slate-500 hidden sm:block">
-                        {{ now()->format('l, M d, Y') }}
+                    <div class="text-sm text-slate-500 hidden sm:block shrink-0">
+                        {{ now()->format('D, M j, Y') }}
                     </div>
                 </div>
             </header>
 
-            <main class="p-4 md:p-6 flex-1">@yield('content')</main>
+            <main class="p-4 md:p-6 lg:p-8 flex-1 max-w-[1400px] w-full mx-auto">@yield('content')</main>
         </div>
     </div>
 </body>

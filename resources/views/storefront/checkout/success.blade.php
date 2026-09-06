@@ -8,7 +8,7 @@
             <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
         </div>
         <h1 class="text-3xl font-bold text-charcoal-700 mb-4">Thank You!</h1>
-        <p class="text-charcoal-500 mb-2">Your order has been placed successfully.</p>
+        <p class="text-slate-500 mb-2">Your order has been placed successfully.</p>
         <p class="text-lg font-semibold text-sage-700 mb-8">Order #{{ $order->order_number }}</p>
 
         <div class="bg-white rounded-2xl border border-oat-200 shadow-card p-6 text-left mb-8">

@@ -48,10 +48,12 @@ class OrderService
 
     protected function restockItems(Order $order): void
     {
-        foreach ($order->items()->with('product')->get() as $item) {
-            if ($item->product) {
-                $this->inventoryService->restoreStock($item->product, $item->quantity);
+        foreach ($order->items()->with(['product', 'variant'])->get() as $item) {
+            if (! $item->product) {
+                continue;
             }
+
+            $this->inventoryService->restoreVariantStock($item->variant, $item->product, $item->quantity);
         }
     }
 

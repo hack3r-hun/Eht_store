@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Page;
+use App\Support\HtmlSanitizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -35,7 +36,7 @@ class PageController extends Controller
         $meta = array_merge($page->meta ?? [], $data['meta'] ?? []);
         $page->update([
             'title' => $data['title'],
-            'content' => $data['content'] ?? $page->content,
+            'content' => HtmlSanitizer::sanitize($data['content'] ?? $page->content),
             'meta' => $meta,
         ]);
 

@@ -4,9 +4,8 @@ namespace Tests\Feature;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
-use App\Models\Category;
 use App\Models\Order;
-use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\User;
 use App\Services\CartService;
 use App\Services\CheckoutService;
@@ -25,19 +24,15 @@ class OrderStockTest extends TestCase
         Role::create(['name' => 'admin']);
     }
 
-    protected function makeProduct(int $stock = 20): Product
+    protected function makeProduct(int $stock = 20)
     {
-        $category = Category::create(['name' => 'Test', 'slug' => 'test', 'is_active' => true]);
-
-        return Product::create([
-            'category_id' => $category->id,
+        return $this->createTestProduct([
             'name' => 'Wire',
-            'slug' => 'wire',
-            'sku' => 'W-001',
+            'slug' => 'wire-'.uniqid(),
+            'sku' => 'W-'.uniqid(),
             'price' => 500,
             'stock_quantity' => $stock,
-            'is_active' => true,
-        ]);
+        ], ['stock_quantity' => $stock]);
     }
 
     protected function checkoutPayload(string $method = 'cod'): array
@@ -56,19 +51,20 @@ class OrderStockTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole('customer');
         $product = $this->makeProduct(5);
+        $variant = $this->defaultVariant($product);
 
         $this->actingAs($user);
-        app(CartService::class)->add($product, 5);
+        app(CartService::class)->add($product, $variant, 5);
 
         // Simulate a concurrent purchase consuming the stock after the cart was filled.
-        Product::whereKey($product->id)->update(['stock_quantity' => 2]);
+        ProductVariant::whereKey($variant->id)->update(['stock_quantity' => 2]);
 
         $response = $this->post(route('checkout.store'), $this->checkoutPayload());
 
         $response->assertRedirect();
         $response->assertSessionHas('error');
         $this->assertDatabaseCount('orders', 0);
-        $this->assertEquals(2, $product->fresh()->stock_quantity);
+        $this->assertEquals(2, $variant->fresh()->stock_quantity);
     }
 
     public function test_cancelling_an_order_restores_stock_once(): void
@@ -79,11 +75,13 @@ class OrderStockTest extends TestCase
         $admin->assignRole('admin');
 
         $product = $this->makeProduct(20);
+        $variant = $this->defaultVariant($product);
 
         $this->actingAs($user);
-        app(CartService::class)->add($product, 3);
+        app(CartService::class)->add($product, $variant, 3);
         $this->post(route('checkout.store'), $this->checkoutPayload())->assertRedirect();
 
+        $this->assertEquals(17, $variant->fresh()->stock_quantity);
         $this->assertEquals(17, $product->fresh()->stock_quantity);
         $order = Order::firstOrFail();
 
@@ -92,6 +90,7 @@ class OrderStockTest extends TestCase
             ->assertRedirect();
 
         $this->assertEquals(OrderStatus::Cancelled, $order->fresh()->status);
+        $this->assertEquals(20, $variant->fresh()->stock_quantity);
         $this->assertEquals(20, $product->fresh()->stock_quantity);
 
         // Cancelling again must not restore stock a second time.
@@ -110,9 +109,10 @@ class OrderStockTest extends TestCase
         $admin->assignRole('admin');
 
         $product = $this->makeProduct(20);
+        $variant = $this->defaultVariant($product);
 
         $this->actingAs($user);
-        app(CartService::class)->add($product, 3);
+        app(CartService::class)->add($product, $variant, 3);
         $this->post(route('checkout.store'), $this->checkoutPayload())->assertRedirect();
         $this->assertEquals(17, $product->fresh()->stock_quantity);
 
@@ -124,6 +124,7 @@ class OrderStockTest extends TestCase
 
         $this->assertDatabaseMissing('orders', ['id' => $order->id]);
         $this->assertDatabaseMissing('order_items', ['order_id' => $order->id]);
+        $this->assertEquals(20, $variant->fresh()->stock_quantity);
         $this->assertEquals(20, $product->fresh()->stock_quantity);
     }
 
@@ -135,9 +136,10 @@ class OrderStockTest extends TestCase
         $admin->assignRole('admin');
 
         $product = $this->makeProduct(20);
+        $variant = $this->defaultVariant($product);
 
         $this->actingAs($user);
-        app(CartService::class)->add($product, 3);
+        app(CartService::class)->add($product, $variant, 3);
         $this->post(route('checkout.store'), $this->checkoutPayload())->assertRedirect();
 
         $order = Order::firstOrFail();
@@ -160,9 +162,10 @@ class OrderStockTest extends TestCase
         $user->assignRole('customer');
 
         $product = $this->makeProduct(20);
+        $variant = $this->defaultVariant($product);
 
         $this->actingAs($user);
-        app(CartService::class)->add($product, 1);
+        app(CartService::class)->add($product, $variant, 1);
         $this->post(route('checkout.store'), $this->checkoutPayload())->assertRedirect();
 
         $order = Order::firstOrFail();
@@ -179,9 +182,10 @@ class OrderStockTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole('customer');
         $product = $this->makeProduct(10);
+        $variant = $this->defaultVariant($product);
 
         $this->actingAs($user);
-        app(CartService::class)->add($product, 4);
+        app(CartService::class)->add($product, $variant, 4);
 
         $order = app(CheckoutService::class)->placeOrder([
             'full_name' => 'Test User',
@@ -190,6 +194,7 @@ class OrderStockTest extends TestCase
             'city' => 'Lahore',
         ], PaymentMethod::Stripe);
 
+        $this->assertEquals(6, $variant->fresh()->stock_quantity);
         $this->assertEquals(6, $product->fresh()->stock_quantity);
 
         Order::whereKey($order->id)->update(['created_at' => now()->subHours(2)]);
@@ -197,6 +202,7 @@ class OrderStockTest extends TestCase
         $this->artisan('orders:expire-stale')->assertSuccessful();
 
         $this->assertEquals(OrderStatus::Cancelled, $order->fresh()->status);
+        $this->assertEquals(10, $variant->fresh()->stock_quantity);
         $this->assertEquals(10, $product->fresh()->stock_quantity);
     }
 
@@ -205,9 +211,10 @@ class OrderStockTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole('customer');
         $product = $this->makeProduct(10);
+        $variant = $this->defaultVariant($product);
 
         $this->actingAs($user);
-        app(CartService::class)->add($product, 1);
+        app(CartService::class)->add($product, $variant, 1);
 
         $order = app(CheckoutService::class)->placeOrder([
             'full_name' => 'Test User',
@@ -219,6 +226,7 @@ class OrderStockTest extends TestCase
         $this->artisan('orders:expire-stale')->assertSuccessful();
 
         $this->assertEquals(OrderStatus::Pending, $order->fresh()->status);
+        $this->assertEquals(9, $variant->fresh()->stock_quantity);
         $this->assertEquals(9, $product->fresh()->stock_quantity);
     }
 }

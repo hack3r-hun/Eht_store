@@ -10,8 +10,10 @@ class OrderItem extends Model
     protected $fillable = [
         'order_id',
         'product_id',
+        'product_variant_id',
         'product_name',
         'product_sku',
+        'size',
         'quantity',
         'unit_price',
         'line_total',
@@ -32,6 +34,12 @@ class OrderItem extends Model
 
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class);
+        // Keep archived products available so order cancel/delete can restock.
+        return $this->belongsTo(Product::class)->withTrashed();
+    }
+
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 }

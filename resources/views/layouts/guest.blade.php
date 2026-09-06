@@ -10,7 +10,7 @@
     <link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,700&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="font-sans antialiased bg-gradient-to-br from-brand-50 via-white to-slate-50 text-slate-800">
+<body class="font-sans antialiased bg-gradient-to-br from-oat-100 via-white to-sage-50 text-slate-800">
     <x-toast-stack />
     <div class="min-h-screen flex flex-col sm:justify-center items-center px-4 py-12">
         <a href="{{ route('home') }}" class="flex items-center mb-8 group animate-fade-in-up">
@@ -25,7 +25,7 @@
                 {{ $slot }}
             </div>
             <p class="text-center text-sm text-slate-500 mt-6">
-                <a href="{{ route('home') }}" class="text-brand-700 font-medium hover:text-brand-800 transition-colors inline-flex items-center gap-1.5">
+                <a href="{{ route('home') }}" class="text-sage-700 font-medium hover:text-sage-800 transition-colors inline-flex items-center gap-1.5">
                     <x-icon name="home" class="w-4 h-4" /> Back to store
                 </a>
             </p>

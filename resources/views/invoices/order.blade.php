@@ -33,7 +33,7 @@
         <tbody>
             @foreach($order->items as $item)
                 <tr>
-                    <td>{{ $item->product_name }}</td>
+                    <td>{{ $item->product_name }}@if($item->size) ({{ $item->size }})@endif</td>
                     <td>{{ $item->product_sku }}</td>
                     <td>{{ $item->quantity }}</td>
                     <td>{{ shop_money($item->unit_price) }}</td>

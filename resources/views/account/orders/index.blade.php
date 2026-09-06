@@ -20,7 +20,7 @@
                             <p class="text-sm text-slate-500">{{ $order->created_at->format('M d, Y') }} · {{ $order->items->count() }} item(s)</p>
                         </div>
                         <div class="text-right">
-                            <p class="font-bold text-brand-700">{{ shop_money($order->total) }}</p>
+                            <p class="font-bold text-sage-700">{{ shop_money($order->total) }}</p>
                             <p class="text-sm capitalize text-slate-500">{{ $order->status->label() }}</p>
                         </div>
                         <a href="{{ route('account.orders.show', $order) }}" class="btn-outline !py-2 !px-4 text-sm">View Details</a>

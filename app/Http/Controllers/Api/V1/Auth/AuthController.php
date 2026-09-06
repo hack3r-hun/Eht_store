@@ -10,9 +10,13 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\CartService;
 use App\Services\EmailVerificationService;
+use Illuminate\Auth\Events\Lockout;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends ApiController
@@ -34,7 +38,10 @@ class AuthController extends ApiController
 
         $cartService->mergeGuestCart($user->id, $request->header('X-Guest-Cart-Token'));
 
-        $token = $user->createToken($request->input('device_name', 'api'))->plainTextToken;
+        $token = $user->createToken(
+            $request->input('device_name', 'api'),
+            $this->tokenAbilities($user)
+        )->plainTextToken;
 
         try {
             if ($user->verification_method === 'otp') {
@@ -56,17 +63,49 @@ class AuthController extends ApiController
 
     public function login(LoginRequest $request, CartService $cartService): JsonResponse
     {
+        // The route-level "auth-api" limiter is keyed by IP only, so a single attacker IP
+        // could otherwise brute-force one account indefinitely. This mirrors the web login's
+        // per-account lockout (LoginRequest::ensureIsNotRateLimited), keyed by email + IP.
+        $throttleKey = Str::transliterate(Str::lower($request->string('email')).'|'.$request->ip());
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            event(new Lockout($request));
+
+            Log::channel('security')->warning('api_login_locked_out', [
+                'email' => Str::lower($request->string('email')),
+                'ip' => $request->ip(),
+            ]);
+
+            $seconds = RateLimiter::availableIn($throttleKey);
+
+            throw ValidationException::withMessages([
+                'email' => ["Too many login attempts. Please try again in {$seconds} seconds."],
+            ]);
+        }
+
         $user = User::where('email', $request->email)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
+            RateLimiter::hit($throttleKey);
+
+            Log::channel('security')->warning('api_login_failed', [
+                'email' => Str::lower($request->string('email')),
+                'ip' => $request->ip(),
+            ]);
+
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
 
+        RateLimiter::clear($throttleKey);
+
         $cartService->mergeGuestCart($user->id, $request->header('X-Guest-Cart-Token'));
 
-        $token = $user->createToken($request->input('device_name', 'api'))->plainTextToken;
+        $token = $user->createToken(
+            $request->input('device_name', 'api'),
+            $this->tokenAbilities($user)
+        )->plainTextToken;
 
         return $this->success([
             'token' => $token,
@@ -86,5 +125,15 @@ class AuthController extends ApiController
     public function user(Request $request): JsonResponse
     {
         return $this->success(new UserResource($request->user()));
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function tokenAbilities(User $user): array
+    {
+        return $user->hasRole('admin')
+            ? ['admin', 'customer']
+            : ['customer'];
     }
 }

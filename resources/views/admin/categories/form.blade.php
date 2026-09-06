@@ -7,13 +7,13 @@
         @csrf
         @if($category->exists) @method('PUT') @endif
 
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-card p-6 space-y-4">
+        <div class="admin-card admin-card-pad space-y-4">
             <div>
-                <label class="block text-sm font-medium mb-2">Name</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Name</label>
                 <input type="text" name="name" value="{{ old('name', $category->name) }}" class="input-field" required>
             </div>
             <div>
-                <label class="block text-sm font-medium mb-2">Parent Category</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Parent Category</label>
                 <select name="parent_id" class="input-field">
                     <option value="">None (top level)</option>
                     @foreach($parents as $parent)
@@ -33,21 +33,22 @@
                     <x-slot:existingImages>
                         <div class="relative">
                             <img src="{{ $category->image_url }}" alt="" class="w-32 h-24 object-cover rounded-xl border border-slate-100">
-                            <span class="absolute -top-2 -left-2 text-[10px] font-bold bg-brand-600 text-white px-1.5 py-0.5 rounded">Current</span>
+                            <span class="absolute -top-2 -left-2 text-[10px] font-bold bg-sage-600 text-white px-1.5 py-0.5 rounded">Current</span>
                         </div>
                     </x-slot:existingImages>
                 @endif
                 @error('image')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
             </x-admin.image-uploader>
             <div>
-                <label class="block text-sm font-medium mb-2">Description</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Description</label>
                 <textarea name="description" rows="3" class="input-field">{{ old('description', $category->description) }}</textarea>
             </div>
             <div>
-                <label class="block text-sm font-medium mb-2">Sort Order</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Sort Order</label>
                 <input type="number" name="sort_order" value="{{ old('sort_order', $category->sort_order ?? 0) }}" class="input-field" min="0">
             </div>
-            <label class="flex items-center gap-2"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $category->is_active ?? true)) class="rounded text-brand-600"> Active</label>
+            <input type="hidden" name="is_active" value="0">
+            <label class="flex items-center gap-2"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $category->is_active ?? true)) class="rounded text-sage-600"> Active</label>
         </div>
 
         <div class="flex gap-3">

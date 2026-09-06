@@ -3,9 +3,16 @@
 @section('title', 'Checkout')
 
 @section('content')
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 class="section-title mb-10 animate-fade-in-up">Checkout</h1>
+    <section class="hero-section py-10 md:py-14">
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <x-reveal type="fade-up">
+                <span class="hero-eyebrow">Almost There</span>
+                <h1 class="hero-title !text-3xl md:!text-4xl !mb-0">Checkout</h1>
+            </x-reveal>
+        </div>
+    </section>
 
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-28 md:pb-10">
         @if($errors->any())
             <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm animate-fade-in">
                 <p class="font-semibold mb-1">Please fix the following before placing your order:</p>
@@ -96,14 +103,14 @@
                             <input type="radio" name="payment_method" value="cod" {{ old('payment_method', 'cod') === 'cod' ? 'checked' : '' }} class="text-sage-600 focus:ring-sage-500">
                             <div>
                                 <span class="font-semibold text-charcoal-700">Cash on Delivery</span>
-                                <p class="text-sm text-charcoal-500">Pay when your order arrives</p>
+                                <p class="text-sm text-slate-500">Pay when your order arrives</p>
                             </div>
                         </label>
                         <label class="flex items-center gap-4 p-4 rounded-xl border-2 border-oat-200 cursor-pointer hover:border-sage-300 transition-colors has-[:checked]:border-sage-600 has-[:checked]:bg-oat-100">
                             <input type="radio" name="payment_method" value="stripe" {{ old('payment_method') === 'stripe' ? 'checked' : '' }} class="text-sage-600 focus:ring-sage-500">
                             <div>
                                 <span class="font-semibold text-charcoal-700">Card Payment</span>
-                                <p class="text-sm text-charcoal-500">Pay securely with credit/debit card</p>
+                                <p class="text-sm text-slate-500">Pay securely with credit/debit card</p>
                             </div>
                         </label>
                     </div>
@@ -117,7 +124,7 @@
                     <div class="space-y-3 mb-6 max-h-60 overflow-y-auto">
                         @foreach($items as $item)
                             <div class="flex justify-between text-sm">
-                                <span class="text-charcoal-600">{{ $item->product->name }} x {{ $item->quantity }}</span>
+                                <span class="text-slate-600">{{ $item->product->name }} x {{ $item->quantity }}</span>
                                 <span class="font-medium">{{ shop_money($item->line_total) }}</span>
                             </div>
                         @endforeach
@@ -137,6 +144,18 @@
                         <span x-show="submitting" x-cloak>Placing Order...</span>
                     </button>
                 </div>
+            </div>
+
+            {{-- Mobile-only sticky total bar, bound to the same live shipping-quote state as the summary above --}}
+            <div class="sticky-order-bar md:hidden">
+                <div>
+                    <p class="text-xs text-slate-500">Total</p>
+                    <p class="text-lg font-bold text-sage-700" x-text="totalLabel">{{ shop_money($totals['total']) }}</p>
+                </div>
+                <button type="submit" class="btn-primary shrink-0" :disabled="submitting" :class="submitting && 'opacity-60 cursor-not-allowed'">
+                    <span x-show="!submitting">Place Order</span>
+                    <span x-show="submitting" x-cloak>Placing...</span>
+                </button>
             </div>
         </form>
     </section>

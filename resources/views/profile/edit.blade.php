@@ -8,8 +8,8 @@
 
         <div class="space-y-6 animate-fade-in-up">
             <div class="flex flex-wrap gap-3 mb-2">
-                <a href="{{ route('account.orders.index') }}" class="text-sm font-medium text-brand-700 hover:text-brand-800">My Orders →</a>
-                <a href="{{ route('account.addresses') }}" class="text-sm font-medium text-brand-700 hover:text-brand-800">My Addresses →</a>
+                <a href="{{ route('account.orders.index') }}" class="text-sm font-medium text-sage-700 hover:text-sage-800">My Orders →</a>
+                <a href="{{ route('account.addresses') }}" class="text-sm font-medium text-sage-700 hover:text-sage-800">My Addresses →</a>
             </div>
             <div class="bg-white rounded-2xl border border-slate-100 shadow-card p-6 sm:p-8">
                 @include('profile.partials.update-profile-information-form')

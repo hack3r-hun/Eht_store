@@ -40,7 +40,7 @@ class PageSmokeTest extends TestCase
         $this->customer->assignRole('customer');
 
         $category = Category::create(['name' => 'Test', 'slug' => 'test', 'is_active' => true]);
-        $this->product = Product::create([
+        $this->product = $this->createTestProduct([
             'category_id' => $category->id,
             'name' => 'Smoke Bulb',
             'slug' => 'smoke-bulb',
@@ -74,7 +74,7 @@ class PageSmokeTest extends TestCase
         $this->get(route('checkout.index'))->assertRedirect(route('cart.index'));
 
         $this->actingAs($this->customer);
-        app(CartService::class)->add($this->product, 1);
+        app(CartService::class)->add($this->product, $this->defaultVariant($this->product), 1);
         $this->get(route('checkout.index'))->assertOk();
 
         $this->post(route('checkout.store'), [
@@ -102,7 +102,7 @@ class PageSmokeTest extends TestCase
     {
         // Data so every admin page has something to render.
         $this->actingAs($this->customer);
-        app(CartService::class)->add($this->product, 1);
+        app(CartService::class)->add($this->product, $this->defaultVariant($this->product), 1);
         $this->post(route('checkout.store'), [
             'full_name' => 'Smoke Tester',
             'phone' => '03001234567',

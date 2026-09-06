@@ -1,6 +1,6 @@
 <x-guest-layout>
     <div class="text-center mb-6">
-        <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-brand-100 text-brand-600 flex items-center justify-center">
+        <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-sage-100 text-sage-600 flex items-center justify-center">
             <x-icon name="mail" class="w-7 h-7" />
         </div>
         <h2 class="text-2xl font-bold text-slate-900">Verify your email</h2>

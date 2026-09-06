@@ -8,18 +8,23 @@ use App\Http\Resources\ProductCollection;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Services\ProductVariantService;
+use App\Support\ImageProcessor;
 use App\Support\MediaUrl;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class ProductController extends ApiController
 {
+    public function __construct(protected ProductVariantService $variantService) {}
+
     public function index(Request $request): JsonResponse
     {
         $perPage = $this->perPage($request);
 
-        $products = Product::with(['category', 'images'])
+        $products = Product::with(['category', 'images', 'activeVariants'])
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = $request->string('search')->toString();
                 $query->where(function ($q) use ($search) {
@@ -35,7 +40,16 @@ class ProductController extends ApiController
             })
             ->when($request->filled('stock'), fn ($query) => match ($request->stock) {
                 'out' => $query->where('stock_quantity', 0),
-                'low' => $query->whereColumn('stock_quantity', '<=', 'low_stock_threshold')->where('stock_quantity', '>', 0),
+                // Matches the web admin product listing's variant-aware "low" filter: a
+                // product can look fine in aggregate while a single size is nearly sold out.
+                'low' => $query->where(function ($q) {
+                    $q->whereColumn('stock_quantity', '<=', 'low_stock_threshold')
+                        ->where('stock_quantity', '>', 0)
+                        ->orWhereHas('activeVariants', function ($vq) {
+                            $vq->whereColumn('product_variants.stock_quantity', '<=', 'products.low_stock_threshold')
+                                ->where('product_variants.stock_quantity', '>', 0);
+                        });
+                }),
                 default => $query,
             })
             ->latest()
@@ -47,7 +61,7 @@ class ProductController extends ApiController
     public function archived(Request $request): JsonResponse
     {
         $products = Product::onlyTrashed()
-            ->with(['category', 'images'])
+            ->with(['category', 'images', 'variants'])
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = $request->string('search')->toString();
                 $query->where(function ($q) use ($search) {
@@ -67,17 +81,28 @@ class ProductController extends ApiController
         $data['slug'] = $data['slug'] ?? Str::slug($data['name']).'-'.Str::random(4);
         $data['is_active'] = $request->boolean('is_active', true);
         $data['is_featured'] = $request->boolean('is_featured', false);
-        unset($data['images']);
+        unset($data['images'], $data['variants']);
 
-        $product = Product::create($data);
-        $this->storeImages($product, $request->file('images', []));
+        $enabledVariants = $request->enabledVariants();
+        $first = $enabledVariants[0];
+        $data['price'] = $first['price'];
+        $data['sale_price'] = $first['sale_price'] ?? null;
+        $data['stock_quantity'] = collect($enabledVariants)->sum(fn ($v) => (int) $v['stock_quantity']);
 
-        return $this->success(new ProductResource($product->load(['category', 'images'])), 201);
+        $product = DB::transaction(function () use ($data, $request, $enabledVariants) {
+            $product = Product::create($data);
+            $this->variantService->sync($product, $enabledVariants);
+            $this->storeImages($product, $request->file('images', []));
+
+            return $product;
+        });
+
+        return $this->success(new ProductResource($product->load(['category', 'images', 'activeVariants', 'variants'])), 201);
     }
 
     public function show(Product $product): JsonResponse
     {
-        return $this->success(new ProductResource($product->load(['category', 'images'])));
+        return $this->success(new ProductResource($product->load(['category', 'images', 'activeVariants', 'variants'])));
     }
 
     public function update(StoreProductRequest $request, Product $product): JsonResponse
@@ -85,12 +110,15 @@ class ProductController extends ApiController
         $data = $request->validated();
         $data['is_active'] = $request->boolean('is_active', true);
         $data['is_featured'] = $request->boolean('is_featured', false);
-        unset($data['images']);
+        unset($data['images'], $data['variants']);
 
-        $product->update($data);
-        $this->storeImages($product, $request->file('images', []));
+        DB::transaction(function () use ($data, $request, $product) {
+            $product->update($data);
+            $this->variantService->sync($product, $request->enabledVariants());
+            $this->storeImages($product, $request->file('images', []));
+        });
 
-        return $this->success(new ProductResource($product->fresh(['category', 'images'])));
+        return $this->success(new ProductResource($product->fresh(['category', 'images', 'activeVariants', 'variants'])));
     }
 
     public function destroy(Product $product): JsonResponse
@@ -161,7 +189,7 @@ class ProductController extends ApiController
         $existingCount = $product->images()->count();
 
         foreach ($files as $index => $file) {
-            $path = $file->store('products', 'public');
+            $path = ImageProcessor::store($file, 'products');
             MediaUrl::forgetExists($path);
 
             ProductImage::create([

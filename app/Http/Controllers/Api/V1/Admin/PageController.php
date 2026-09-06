@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Http\Controllers\Api\V1\ApiController;
 use App\Http\Resources\PageResource;
 use App\Models\Page;
+use App\Support\HtmlSanitizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -35,7 +36,7 @@ class PageController extends ApiController
         $meta = array_merge($page->meta ?? [], $data['meta'] ?? []);
         $page->update([
             'title' => $data['title'],
-            'content' => $data['content'] ?? $page->content,
+            'content' => HtmlSanitizer::sanitize($data['content'] ?? $page->content),
             'meta' => $meta,
         ]);
 

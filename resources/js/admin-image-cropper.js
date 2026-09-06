@@ -1,6 +1,15 @@
+/**
+ * Product image cropper Alpine component for the admin product form.
+ */
 import Cropper from 'cropperjs';
 
-document.addEventListener('alpine:init', () => {
+export function registerAdminImageCropper(Alpine) {
+    // Guard against double registration when HMR reloads the module.
+    if (window.__adminImageCropperRegistered) {
+        return;
+    }
+    window.__adminImageCropperRegistered = true;
+
     Alpine.data('adminImageCropper', (config = {}) => ({
         previews: [],
         pendingFiles: [],
@@ -15,6 +24,8 @@ document.addEventListener('alpine:init', () => {
         maxBytes: config.maxBytes ?? 5 * 1024 * 1024,
         inputName: config.inputName ?? 'images[]',
         multiple: config.multiple !== false,
+        _cropLoadHandler: null,
+        _cropErrorHandler: null,
 
         notify(message, type = 'success') {
             window.dispatchEvent(new CustomEvent('toast', {
@@ -41,13 +52,13 @@ document.addEventListener('alpine:init', () => {
 
             // Without DataTransfer we cannot rebuild the input's file list, so
             // leave the native input untouched and let the server validate.
-            if (!this.canManageInput()) {
+            if (! this.canManageInput()) {
                 return;
             }
 
             const files = Array.from(event.target.files || []);
 
-            if (!this.multiple) {
+            if (! this.multiple) {
                 this.previews = [];
                 this.pendingFiles = [];
             }
@@ -55,7 +66,7 @@ document.addEventListener('alpine:init', () => {
             event.target.value = '';
 
             for (const file of files) {
-                if (!file.type.startsWith('image/')) {
+                if (! file.type.startsWith('image/')) {
                     this.errors.push(`${file.name}: not an image file.`);
                     continue;
                 }
@@ -72,7 +83,7 @@ document.addEventListener('alpine:init', () => {
                 this.notify(this.errors[0], 'error');
             }
 
-            if (this.cropQueue.length > 0 && !this.cropModalOpen) {
+            if (this.cropQueue.length > 0 && ! this.cropModalOpen) {
                 this.processNextCrop();
             }
         },
@@ -80,40 +91,98 @@ document.addEventListener('alpine:init', () => {
         processNextCrop() {
             const file = this.cropQueue.shift();
 
-            if (!file) {
+            if (! file) {
                 return;
             }
+
+            this.destroyCropper();
 
             this.currentFile = file;
             this.currentFileName = file.name;
             this.cropImageSrc = URL.createObjectURL(file);
             this.cropModalOpen = true;
 
-            this.$nextTick(() => this.initCropper());
+            // Wait until Alpine has bound :src and the browser has decoded the blob.
+            this.$nextTick(() => {
+                this.$nextTick(() => this.initCropper());
+            });
         },
 
         initCropper() {
             const image = this.$refs.cropImage;
 
-            if (!image) {
+            if (! image || ! this.cropImageSrc) {
                 this.acceptOriginal();
 
                 return;
             }
 
-            if (this.cropper) {
-                this.cropper.destroy();
+            this.destroyCropper();
+
+            const start = () => {
+                if (! this.cropModalOpen || ! this.$refs.cropImage) {
+                    return;
+                }
+
+                try {
+                    this.cropper = new Cropper(this.$refs.cropImage, {
+                        aspectRatio: this.aspectRatio,
+                        viewMode: 1,
+                        autoCropArea: 1,
+                        responsive: true,
+                        background: false,
+                        checkOrientation: true,
+                    });
+                } catch (error) {
+                    console.error('Cropper failed to start', error);
+                    this.acceptOriginal();
+                }
+            };
+
+            if (image.complete && image.naturalWidth > 0) {
+                start();
+
+                return;
             }
 
-            try {
-                this.cropper = new Cropper(image, {
-                    aspectRatio: this.aspectRatio,
-                    viewMode: 1,
-                    autoCropArea: 1,
-                    responsive: true,
-                });
-            } catch {
+            this._cropLoadHandler = () => {
+                image.removeEventListener('load', this._cropLoadHandler);
+                image.removeEventListener('error', this._cropErrorHandler);
+                this._cropLoadHandler = null;
+                start();
+            };
+
+            this._cropErrorHandler = () => {
+                image.removeEventListener('load', this._cropLoadHandler);
+                image.removeEventListener('error', this._cropErrorHandler);
+                this._cropLoadHandler = null;
                 this.acceptOriginal();
+            };
+
+            image.addEventListener('load', this._cropLoadHandler);
+            image.addEventListener('error', this._cropErrorHandler);
+
+            // Force reload if the browser cached an empty src before Alpine bound the blob URL.
+            if (image.getAttribute('src') !== this.cropImageSrc) {
+                image.src = this.cropImageSrc;
+            }
+        },
+
+        destroyCropper() {
+            if (this.$refs.cropImage) {
+                if (this._cropLoadHandler) {
+                    this.$refs.cropImage.removeEventListener('load', this._cropLoadHandler);
+                }
+                if (this._cropErrorHandler) {
+                    this.$refs.cropImage.removeEventListener('error', this._cropErrorHandler);
+                }
+            }
+            this._cropLoadHandler = null;
+            this._cropErrorHandler = null;
+
+            if (this.cropper) {
+                this.cropper.destroy();
+                this.cropper = null;
             }
         },
 
@@ -132,7 +201,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         addPendingFile(file, previewUrl) {
-            if (!this.multiple) {
+            if (! this.multiple) {
                 this.pendingFiles = [file];
                 this.previews = [previewUrl];
             } else {
@@ -144,7 +213,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         confirmCrop() {
-            if (!this.cropper) {
+            if (! this.cropper) {
                 this.acceptOriginal();
 
                 return;
@@ -156,13 +225,19 @@ document.addEventListener('alpine:init', () => {
                 imageSmoothingQuality: 'high',
             });
 
+            if (! canvas) {
+                this.acceptOriginal();
+
+                return;
+            }
+
             // Keep the source format so PNG/WebP transparency survives the crop.
             const sourceType = this.currentFile?.type;
             const type = ['image/png', 'image/webp'].includes(sourceType) ? sourceType : 'image/jpeg';
             const extension = { 'image/png': 'png', 'image/webp': 'webp', 'image/jpeg': 'jpg' }[type];
 
             canvas.toBlob((blob) => {
-                if (!blob) {
+                if (! blob) {
                     this.acceptOriginal();
 
                     return;
@@ -184,7 +259,7 @@ document.addEventListener('alpine:init', () => {
         syncFileInput() {
             const input = this.$refs.fileInput;
 
-            if (!input) {
+            if (! input) {
                 return;
             }
 
@@ -202,16 +277,13 @@ document.addEventListener('alpine:init', () => {
         closeCropModal() {
             this.cropModalOpen = false;
             this.currentFile = null;
-
-            if (this.cropper) {
-                this.cropper.destroy();
-                this.cropper = null;
-            }
+            this.destroyCropper();
 
             if (this.cropImageSrc) {
                 URL.revokeObjectURL(this.cropImageSrc);
                 this.cropImageSrc = '';
             }
+            document.body.classList.remove('overflow-hidden');
         },
 
         skipCropQueue() {
@@ -219,4 +291,4 @@ document.addEventListener('alpine:init', () => {
             this.closeCropModal();
         },
     }));
-});
+}

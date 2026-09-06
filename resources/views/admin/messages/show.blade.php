@@ -6,7 +6,7 @@
     <div class="grid grid-cols-1 xl:grid-cols-[1fr_22rem] gap-6 items-start">
         <div class="space-y-6">
             <x-reveal type="fade-up">
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-card p-6">
+                <div class="admin-card admin-card-pad">
                     <div class="flex flex-wrap justify-between gap-4 mb-6">
                         <div class="text-sm text-slate-500">
                             <p><strong>From:</strong> {{ $message->name }} ({{ $message->email }})</p>
@@ -21,7 +21,7 @@
             </x-reveal>
 
             <x-reveal type="fade-up" delay="80">
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-card p-6">
+                <div class="admin-card admin-card-pad">
                     <h2 class="font-bold text-slate-900 mb-4">Reply History</h2>
                     @if($message->replies->isEmpty())
                         <p class="text-sm text-slate-500">No replies sent yet.</p>
@@ -43,7 +43,7 @@
         </div>
 
         <x-reveal type="fade-left" delay="100">
-            <aside class="bg-white rounded-2xl border border-slate-100 shadow-card p-6 sticky top-24">
+            <aside class="admin-card admin-card-pad sticky top-24">
                 <h2 class="font-bold text-slate-900 mb-2">Send Reply</h2>
                 <p class="text-sm text-slate-500 mb-4">Reply will be emailed to {{ $message->email }} and saved here.</p>
 
@@ -55,11 +55,14 @@
                 </form>
 
                 <div class="border-t border-slate-100 mt-6 pt-6">
-                    <form action="{{ route('admin.messages.destroy', $message) }}" method="POST" onsubmit="return confirm('Delete message and replies?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="text-red-600 text-sm font-medium hover:underline">Delete Conversation</button>
-                    </form>
+                    <x-confirm-delete
+                        :action="route('admin.messages.destroy', $message)"
+                        title="Delete this conversation?"
+                        message="The message and all its replies will be permanently deleted."
+                        confirm-label="Delete Conversation"
+                        trigger-class="text-red-600 text-sm font-medium hover:underline"
+                        :trigger-show-icon="false"
+                    >Delete Conversation</x-confirm-delete>
                 </div>
             </aside>
         </x-reveal>

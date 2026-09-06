@@ -56,6 +56,17 @@ php artisan serve
 
 Visit: http://127.0.0.1:8000
 
+### Admin dashboard
+
+| Item | Value |
+|------|--------|
+| Login | http://127.0.0.1:8000/login |
+| Dashboard | http://127.0.0.1:8000/admin |
+| Email | `admin@ekyarnco.local` |
+| Password | `SEED_ADMIN_PASSWORD` from `.env`, or `password` if unset |
+
+Customer demo: `customer@ekyarnco.local` / `SEED_CUSTOMER_PASSWORD` (default `password`).
+
 ## Environment Variables
 
 ```env
@@ -66,14 +77,24 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 SHOP_NAME="EK Yarn Co."
 SHOP_CURRENCY=PKR
 SHOP_SHIPPING_FLAT=250
+
+# Demo seed passwords (change in production)
+SEED_ADMIN_PASSWORD=
+SEED_CUSTOMER_PASSWORD=
+
+# Prefer redis when available; file is a solid production fallback
+# SESSION_DRIVER=redis
+# CACHE_STORE=redis
+# SESSION_ENCRYPT=true
+# SANCTUM_TOKEN_EXPIRATION=10080
 ```
 
 ## Demo Accounts
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | admin@ekyarnco.local | set via `SEED_ADMIN_PASSWORD` |
-| Customer | customer@ekyarnco.local | set via `SEED_CUSTOMER_PASSWORD` |
+| Admin | admin@ekyarnco.local | set via `SEED_ADMIN_PASSWORD` (default `password`) |
+| Customer | customer@ekyarnco.local | set via `SEED_CUSTOMER_PASSWORD` (default `password`) |
 
 ## REST API (`/api/v1`)
 
@@ -147,9 +168,18 @@ php artisan test
 ## Production Checklist
 
 - Set `APP_ENV=production`, `APP_DEBUG=false`
+- Use HTTPS; change the seeded admin password (`SEED_ADMIN_PASSWORD` + `php artisan accounts:sync-passwords` if used)
+- Prefer `CACHE_STORE=redis` and `SESSION_DRIVER=redis` (or `file` if Redis is unavailable); set `SESSION_ENCRYPT=true`
 - Configure MySQL database
 - Set Stripe live keys and webhook endpoint: `POST /webhooks/stripe`
 - Configure SMTP for order/contact emails
-- Run `php artisan config:cache` and `php artisan route:cache`
+- Build front-end assets: `npm ci && npm run build`
+- Cache Laravel config/routes/views/events:
+  ```bash
+  php artisan config:cache
+  php artisan route:cache
+  php artisan view:cache
+  php artisan event:cache
+  ```
 - Set up queue worker for mail: `php artisan queue:work`
-- Enable HTTPS
+- Confirm security headers (CSP, HSTS) and Sanctum token expiry (`SANCTUM_TOKEN_EXPIRATION`, default 7 days)

@@ -9,6 +9,8 @@
     <link rel="canonical" href="{{ url()->current() }}">
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('images/logo.png') }}">
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <meta name="theme-color" content="#E2725B">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,700&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -39,11 +41,21 @@
                 </nav>
 
                 <div class="flex items-center gap-3">
-                    <a href="{{ route('cart.index') }}" class="relative p-2 rounded-xl text-charcoal-600 hover:bg-oat-100 hover:text-sage-700 transition-all duration-200">
+                    <a
+                        href="{{ route('cart.index') }}"
+                        class="relative p-2 rounded-xl text-charcoal-600 hover:bg-oat-100 hover:text-sage-700 transition-all duration-200"
+                        x-data="{ pop: @js((bool) session('cart_updated')), count: {{ (int) $cartCount }} }"
+                        x-init="if (pop) setTimeout(() => pop = false, 700)"
+                        @cart-updated.window="if ($event.detail.cart_count !== undefined) { count = $event.detail.cart_count; pop = true; setTimeout(() => pop = false, 700); }"
+                    >
                         <x-icon name="cart" class="w-6 h-6" />
-                        @if($cartCount > 0)
-                            <span class="absolute -top-1 -right-1 w-5 h-5 bg-terracotta-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-fade-in">{{ $cartCount }}</span>
-                        @endif
+                        <span
+                            x-show="count > 0"
+                            x-cloak
+                            class="absolute -top-1 -right-1 w-5 h-5 bg-terracotta-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-fade-in"
+                            :class="pop && 'animate-pop'"
+                            x-text="count"
+                        ></span>
                     </a>
 
                     @auth
@@ -112,7 +124,11 @@
         @endif
     @endauth
 
-    <main>
+    @php
+        $suppressMobileTabBar = request()->routeIs('cart.*') || request()->routeIs('checkout.*');
+    @endphp
+
+    <main @unless($suppressMobileTabBar) class="pb-20 md:pb-0" @endunless>
         @unless(request()->routeIs('home') || View::hasSection('hide_back'))
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 relative z-20">
                 <x-back-button
@@ -156,5 +172,53 @@
             </div>
         </div>
     </footer>
+
+    @unless($suppressMobileTabBar)
+        {{-- Mobile bottom tab bar: thumb-zone navigation, hidden on cart/checkout in favor of the sticky order-total bar --}}
+        <nav class="mobile-tabbar md:hidden" aria-label="Primary">
+            <a href="{{ route('home') }}" class="mobile-tabbar-link {{ request()->routeIs('home') ? 'mobile-tabbar-link-active' : '' }}">
+                <x-icon name="home" class="w-5 h-5" />
+                <span>Home</span>
+            </a>
+            <a href="{{ route('products.index') }}" class="mobile-tabbar-link {{ request()->routeIs('products.*') && !request()->filled('search') ? 'mobile-tabbar-link-active' : '' }}">
+                <x-icon name="cube" class="w-5 h-5" />
+                <span>Shop</span>
+            </a>
+            <a href="{{ route('products.index') }}#search-products" class="mobile-tabbar-link {{ request()->routeIs('products.*') && request()->filled('search') ? 'mobile-tabbar-link-active' : '' }}">
+                <x-icon name="search" class="w-5 h-5" />
+                <span>Search</span>
+            </a>
+            <a
+                href="{{ route('cart.index') }}"
+                class="mobile-tabbar-link relative {{ request()->routeIs('cart.*') ? 'mobile-tabbar-link-active' : '' }}"
+                x-data="{ pop: @js((bool) session('cart_updated')), count: {{ (int) $cartCount }} }"
+                x-init="if (pop) setTimeout(() => pop = false, 700)"
+                @cart-updated.window="if ($event.detail.cart_count !== undefined) { count = $event.detail.cart_count; pop = true; setTimeout(() => pop = false, 700); }"
+            >
+                <span class="relative inline-block">
+                    <x-icon name="cart" class="w-5 h-5" />
+                    <span
+                        x-show="count > 0"
+                        x-cloak
+                        class="absolute -top-1.5 -right-2 w-4 h-4 bg-terracotta-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
+                        :class="pop && 'animate-pop'"
+                        x-text="count"
+                    ></span>
+                </span>
+                <span>Cart</span>
+            </a>
+            @auth
+                <a href="{{ route('profile.edit') }}" class="mobile-tabbar-link {{ request()->routeIs('profile.*') ? 'mobile-tabbar-link-active' : '' }}">
+                    <x-icon name="user" class="w-5 h-5" />
+                    <span>Account</span>
+                </a>
+            @else
+                <a href="{{ route('login') }}" class="mobile-tabbar-link {{ request()->routeIs('login') ? 'mobile-tabbar-link-active' : '' }}">
+                    <x-icon name="user" class="w-5 h-5" />
+                    <span>Account</span>
+                </a>
+            @endauth
+        </nav>
+    @endunless
 </body>
 </html>

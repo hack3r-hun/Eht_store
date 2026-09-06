@@ -12,10 +12,14 @@ class CartItemResource extends JsonResource
         return [
             'id' => $this->id,
             'product_id' => $this->product_id,
+            'product_variant_id' => $this->product_variant_id,
+            'size' => $this->variant?->size,
             'quantity' => $this->quantity,
+            'unit_price' => $this->unit_price,
             'line_total' => $this->line_total,
             'line_total_label' => shop_money($this->line_total),
             'product' => new ProductResource($this->whenLoaded('product')),
+            'variant' => new ProductVariantResource($this->whenLoaded('variant')),
         ];
     }
 }

@@ -15,8 +15,14 @@ class CartIdentity
 
     public static function resolve(?string $headerToken = null, bool $createIfMissing = false): self
     {
-        if (Auth::check()) {
-            return new self(userId: Auth::id());
+        // Stateless API requests authenticate via a Sanctum bearer token, which is never
+        // recognized by the default "web" (session) guard. Route middleware doesn't apply
+        // auth:sanctum here (guest checkout must keep working), so we check the sanctum
+        // guard explicitly instead of relying on Auth::check()/Auth::id() picking it up.
+        $guard = request()->is('api/*') ? Auth::guard('sanctum') : Auth::guard();
+
+        if ($guard->check()) {
+            return new self(userId: $guard->id());
         }
 
         $token = $headerToken

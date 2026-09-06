@@ -13,7 +13,7 @@ class ProductController extends ApiController
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Product::with(['images', 'category'])
+        $query = Product::with(['images', 'category', 'activeVariants'])
             ->where('is_active', true);
 
         if ($request->filled('category')) {
@@ -53,12 +53,12 @@ class ProductController extends ApiController
 
     public function show(string $slug): JsonResponse
     {
-        $product = Product::with(['images', 'category'])
+        $product = Product::with(['images', 'category', 'activeVariants'])
             ->where('slug', $slug)
             ->where('is_active', true)
             ->firstOrFail();
 
-        $relatedProducts = Product::with('images')
+        $relatedProducts = Product::with(['category', 'images', 'activeVariants'])
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->where('is_active', true)

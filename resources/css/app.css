@@ -10,19 +10,65 @@
 
 @layer components {
     .btn-primary {
-        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-terracotta-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-terracotta-500/25 transition-all duration-300 hover:-translate-y-0.5 hover:bg-terracotta-600 hover:shadow-xl hover:shadow-terracotta-500/30 active:translate-y-0;
+        @apply relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-xl bg-terracotta-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-terracotta-500/25 transition-all duration-300 hover:-translate-y-0.5 hover:bg-terracotta-600 hover:shadow-xl hover:shadow-terracotta-500/30 active:translate-y-0 active:scale-[0.97];
+    }
+
+    /* Subtle diagonal shine sweeping across on hover — layered on top of the
+       existing lift+shadow transition, disabled under prefers-reduced-motion. */
+    .btn-primary::after {
+        content: '';
+        @apply absolute inset-0 -translate-x-full skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none;
+        transition: transform 0.75s ease;
+    }
+
+    .btn-primary:hover::after {
+        @apply translate-x-full;
+    }
+
+    .badge-sale {
+        @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-gold-600 text-white shadow-sm animate-pulse-soft;
     }
 
     .btn-accent {
-        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-sage-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-sage-700/20 transition-all duration-300 hover:-translate-y-0.5 hover:bg-sage-700 hover:shadow-xl active:translate-y-0;
+        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-sage-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-sage-700/20 transition-all duration-300 hover:-translate-y-0.5 hover:bg-sage-700 hover:shadow-xl active:translate-y-0 active:scale-[0.97];
     }
 
     .btn-outline {
-        @apply inline-flex items-center justify-center gap-2 rounded-xl border-2 border-sage-500 px-6 py-3 text-sm font-semibold text-charcoal-700 transition-all duration-300 hover:-translate-y-0.5 hover:bg-oat-100 active:translate-y-0;
+        @apply inline-flex items-center justify-center gap-2 rounded-xl border-2 border-sage-500 px-6 py-3 text-sm font-semibold text-charcoal-700 transition-all duration-300 hover:-translate-y-0.5 hover:bg-oat-100 active:translate-y-0 active:scale-[0.97];
     }
 
     .btn-danger {
-        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-red-600/25 transition-all duration-300 hover:-translate-y-0.5 hover:bg-red-700 hover:shadow-xl hover:shadow-red-600/30 active:translate-y-0;
+        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-red-600/25 transition-all duration-300 hover:-translate-y-0.5 hover:bg-red-700 hover:shadow-xl hover:shadow-red-600/30 active:translate-y-0 active:scale-[0.97];
+    }
+
+    .mobile-tabbar {
+        @apply fixed bottom-0 inset-x-0 z-40 grid grid-cols-5 bg-white border-t border-slate-100 shadow-[0_-4px_24px_-4px_rgba(15,23,42,0.08)];
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .mobile-tabbar-link {
+        @apply flex flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-medium text-slate-500 transition-colors active:scale-95;
+    }
+
+    .mobile-tabbar-link-active {
+        @apply text-sage-700;
+    }
+
+    .sticky-order-bar {
+        @apply fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-4 bg-white border-t border-slate-100 shadow-[0_-4px_24px_-4px_rgba(15,23,42,0.08)] px-4 py-3;
+        padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+    }
+
+    .qty-stepper {
+        @apply flex items-center border-2 border-oat-200 rounded-xl overflow-hidden bg-white focus-within:border-sage-500 transition-colors;
+    }
+
+    .qty-stepper-btn {
+        @apply px-4 py-3.5 min-w-[44px] text-charcoal-500 hover:bg-oat-100 hover:text-sage-700 active:scale-95 transition-all duration-150 text-xl font-bold disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-charcoal-500 disabled:active:scale-100;
+    }
+
+    .qty-stepper-input {
+        @apply w-16 py-3.5 text-center border-0 bg-transparent focus:ring-0 font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none;
     }
 
     .card-hover {
@@ -33,13 +79,56 @@
         @apply relative overflow-hidden transition-all duration-500;
     }
 
+    /* Always a faint tint so cards read as rich on touch devices too — not
+       just on desktop :hover, which never fires on tap. */
     .card-glow::before {
         content: '';
-        @apply absolute inset-0 opacity-0 transition-opacity duration-500 bg-gradient-to-br from-terracotta-400/10 to-sage-500/10 pointer-events-none;
+        @apply absolute inset-0 opacity-30 md:opacity-0 transition-opacity duration-500 bg-gradient-to-br from-terracotta-400/10 to-sage-500/10 pointer-events-none;
     }
 
     .card-glow:hover::before {
         @apply opacity-100;
+    }
+
+    .img-skeleton {
+        @apply bg-oat-200 overflow-hidden;
+    }
+
+    .img-skeleton::after {
+        content: '';
+        @apply absolute inset-0 -translate-x-full skew-x-12 bg-gradient-to-r from-transparent via-white/60 to-transparent;
+        animation: shimmerSweep 1.4s ease-in-out infinite;
+    }
+
+    .stitch-divider-svg path {
+        stroke-dasharray: 400;
+        stroke-dashoffset: 400;
+        transition: stroke-dashoffset 1.2s ease-out;
+    }
+
+    [data-reveal].is-visible .stitch-divider-svg path {
+        stroke-dashoffset: 0;
+    }
+
+    /* Dark contrast band — used sparingly (one per page) to break up an
+       otherwise all-white/oat site and read as premium by contrast. */
+    .section-dark {
+        @apply relative overflow-hidden bg-charcoal-900 text-oat-100;
+    }
+
+    /* One consistent hero pattern — replaces 4 divergent per-page H1/padding
+       combos (this pass builds it for Home; other marketing pages adopt it
+       in a later slice). */
+    .hero-section {
+        @apply relative overflow-hidden bg-gradient-to-br from-oat-100 via-white to-terracotta-50 border-b border-oat-200;
+    }
+
+    .hero-eyebrow {
+        @apply inline-block px-4 py-1.5 rounded-full bg-white text-sage-700 text-sm font-semibold mb-6 border border-sage-200 shadow-card;
+    }
+
+    .hero-title {
+        @apply text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] mb-6 text-charcoal-700;
     }
 
     .section-title {
@@ -47,7 +136,7 @@
     }
 
     .section-subtitle {
-        @apply mt-3 text-lg text-charcoal-500 max-w-2xl;
+        @apply mt-3 text-lg text-slate-500 max-w-2xl;
     }
 
     .section-badge {
@@ -98,7 +187,7 @@
     }
 
     .nav-link-active {
-        @apply text-sage-700 after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full after:rounded-full after:bg-terracotta-400;
+        @apply text-sage-700 after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full after:rounded-full after:bg-terracotta-500;
     }
 
     /* Scroll reveal — visible by default; hidden only once JS is ready */
@@ -144,30 +233,111 @@
         @apply relative z-10;
     }
 
-    /* Admin stat cards */
-    .admin-stat-card {
-        @apply relative overflow-hidden rounded-2xl p-6 text-white transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl;
+    /* Admin shell — light Shopify-inspired surface */
+    .admin-layout {
+        @apply bg-slate-50 text-slate-800;
     }
 
-    .admin-stat-card::after {
-        content: '';
-        @apply absolute -right-6 -top-6 w-24 h-24 rounded-full bg-white/10 transition-transform duration-500 pointer-events-none;
+    .admin-layout .admin-stat-card {
+        @apply relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 text-slate-900 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md;
     }
 
-    .admin-stat-card:hover::after {
-        @apply scale-150;
+    .admin-layout .admin-stat-card::after {
+        content: none;
+    }
+
+    .admin-layout .admin-stat-card .admin-stat-label {
+        @apply text-sm font-medium text-slate-500;
+    }
+
+    .admin-layout .admin-stat-card .admin-stat-value {
+        @apply text-2xl md:text-3xl font-bold text-slate-900 tracking-tight;
+    }
+
+    .admin-layout .admin-stat-icon {
+        @apply w-10 h-10 rounded-xl flex items-center justify-center shrink-0;
+    }
+
+    .admin-stat-sparkline {
+        @apply relative block h-9 w-full mt-2 overflow-hidden;
+    }
+
+    .admin-stat-sparkline canvas {
+        @apply absolute inset-0 w-full h-full;
     }
 
     .admin-sidebar-link {
-        @apply flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300;
+        @apply flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200;
     }
 
     .admin-sidebar-link-active {
-        @apply bg-oat-100 text-sage-700 shadow-sm;
+        @apply bg-sage-50 text-sage-800 ring-1 ring-sage-100 shadow-sm;
     }
 
     .admin-sidebar-link-inactive {
-        @apply text-slate-600 hover:bg-oat-100 hover:text-sage-700 hover:translate-x-1;
+        @apply text-slate-600 hover:bg-slate-50 hover:text-slate-900;
+    }
+
+    .admin-card {
+        @apply bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden;
+    }
+
+    .admin-card-pad {
+        @apply p-4 md:p-5;
+    }
+
+    .admin-table {
+        @apply w-full text-sm;
+    }
+
+    .admin-table thead {
+        @apply bg-slate-50 text-left;
+    }
+
+    .admin-table th {
+        @apply px-4 md:px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider whitespace-nowrap;
+    }
+
+    .admin-table td {
+        @apply px-4 md:px-5 py-3.5 align-middle;
+    }
+
+    .admin-table tbody tr {
+        @apply border-t border-slate-100 transition-colors duration-150 hover:bg-slate-50/80;
+    }
+
+    .admin-badge {
+        @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold;
+    }
+
+    .admin-action-link {
+        @apply inline-flex items-center gap-1 text-sage-700 font-semibold text-sm transition-all duration-200 hover:text-sage-800 hover:gap-2;
+    }
+
+    .admin-filter-bar {
+        @apply admin-card admin-card-pad mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center;
+    }
+
+    .admin-filter-search {
+        @apply w-full sm:flex-1 sm:min-w-[14rem] lg:min-w-[18rem];
+    }
+
+    .admin-filter-control {
+        @apply w-full sm:w-auto sm:min-w-[10rem] sm:max-w-full;
+    }
+
+    .admin-filter-actions {
+        @apply flex flex-wrap items-center gap-2 w-full sm:w-auto;
+    }
+
+    .admin-layout .admin-card > .admin-table,
+    .admin-layout .admin-card .overflow-x-auto {
+        @apply w-full;
+    }
+
+    /* Soft tint utilities for secondary metrics */
+    .admin-layout .admin-metric {
+        @apply bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 md:p-5;
     }
 
     .product-filter-pill {
@@ -206,38 +376,6 @@
         @apply w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3;
     }
 
-    .admin-card {
-        @apply bg-white rounded-2xl border border-slate-100 shadow-card overflow-hidden card-glow;
-    }
-
-    .admin-table {
-        @apply w-full text-sm;
-    }
-
-    .admin-table thead {
-        @apply bg-slate-50/80 text-left;
-    }
-
-    .admin-table th {
-        @apply px-5 py-4 font-semibold text-slate-600 text-xs uppercase tracking-wider;
-    }
-
-    .admin-table td {
-        @apply px-5 py-4;
-    }
-
-    .admin-table tbody tr {
-        @apply border-t border-slate-50 transition-all duration-200 hover:bg-oat-100/40;
-    }
-
-    .admin-badge {
-        @apply inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold;
-    }
-
-    .admin-action-link {
-        @apply inline-flex items-center gap-1 text-sage-700 font-semibold text-sm transition-all duration-200 hover:text-sage-800 hover:gap-2;
-    }
-
     .back-button {
         @apply inline-flex items-center gap-2 text-sm font-semibold text-charcoal-600 hover:text-sage-700 transition-colors cursor-pointer no-underline;
     }
@@ -250,15 +388,20 @@
         @apply w-10 h-10;
     }
 
-    .confirm-modal {
-        @apply fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6;
+    .confirm-dialog {
+        @apply max-w-none w-full h-full max-h-none m-0 border-0 bg-transparent p-4 sm:p-6 shadow-none;
+        /* Open state is controlled by the browser; center the panel. */
     }
 
-    .confirm-modal-backdrop {
-        @apply absolute inset-0 bg-slate-900/50 backdrop-blur-sm;
+    .confirm-dialog[open] {
+        @apply flex items-center justify-center;
     }
 
-    .confirm-modal-panel {
+    .confirm-dialog::backdrop {
+        @apply bg-slate-900/50 backdrop-blur-sm;
+    }
+
+    .confirm-dialog-panel {
         @apply relative w-full max-w-md bg-white rounded-3xl border border-slate-100 shadow-2xl p-6 sm:p-8 text-center;
     }
 
@@ -267,7 +410,15 @@
     }
 
     .confirm-modal-icon {
-        @apply w-16 h-16 mx-auto mb-5 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center ring-8 ring-red-50/80;
+        @apply w-16 h-16 mx-auto mb-5 rounded-2xl flex items-center justify-center ring-8;
+    }
+
+    .confirm-modal-icon-danger {
+        @apply bg-red-50 text-red-600 ring-red-50/80;
+    }
+
+    .confirm-modal-icon-neutral {
+        @apply bg-sage-50 text-sage-600 ring-sage-50/80;
     }
 
     .confirm-modal-title {
@@ -284,6 +435,24 @@
 
     .confirm-modal-actions {
         @apply mt-8 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-center gap-3;
+    }
+
+    /* Bottom-sheet variant of .confirm-dialog's recipe — same native <dialog>
+       teleport pattern, opens from the bottom edge instead of centering. */
+    .filter-drawer {
+        @apply max-w-none w-full h-full max-h-none m-0 border-0 bg-transparent p-0 shadow-none;
+    }
+
+    .filter-drawer[open] {
+        @apply flex items-end justify-center;
+    }
+
+    .filter-drawer::backdrop {
+        @apply bg-slate-900/50 backdrop-blur-sm;
+    }
+
+    .filter-drawer-panel {
+        @apply relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl sm:mb-6 border border-slate-100 shadow-2xl p-6 max-h-[85vh] overflow-y-auto text-left;
     }
 }
 
@@ -306,6 +475,14 @@
 
     .animate-pulse-soft {
         animation: pulseSoft 3s ease-in-out infinite;
+    }
+
+    .animate-drift {
+        animation: drift 18s ease-in-out infinite;
+    }
+
+    .animate-pop {
+        animation: pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     .animation-delay-100 { animation-delay: 100ms; }
@@ -384,4 +561,46 @@
 @keyframes pulseSoft {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.85; }
+}
+
+@keyframes drift {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(12px, -8px); }
+}
+
+@keyframes pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.45); }
+    100% { transform: scale(1); }
+}
+
+@keyframes shimmerSweep {
+    0% { transform: translateX(-100%) skewX(-12deg); }
+    100% { transform: translateX(250%) skewX(-12deg); }
+}
+
+/* Users who ask for reduced motion still get the color/layout redesign —
+   just not the new continuous ambient motion or hover shine sweep. */
+@media (prefers-reduced-motion: reduce) {
+    .animate-float,
+    .animate-pulse-soft,
+    .animate-drift,
+    .animate-pop {
+        animation: none !important;
+    }
+
+    .btn-primary::after {
+        transition: none !important;
+        display: none;
+    }
+
+    .img-skeleton::after {
+        animation: none !important;
+        display: none;
+    }
+
+    .stitch-divider-svg path {
+        transition: none !important;
+        stroke-dashoffset: 0 !important;
+    }
 }

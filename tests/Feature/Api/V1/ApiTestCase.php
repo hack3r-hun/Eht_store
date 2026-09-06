@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Api\V1;
 
-use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -44,18 +43,8 @@ abstract class ApiTestCase extends TestCase
         return $this;
     }
 
-    protected function createProduct(array $overrides = []): Product
+    protected function createProduct(array $overrides = [], array $variantOverrides = []): Product
     {
-        $category = Category::create(['name' => 'Test', 'slug' => 'test-'.uniqid(), 'is_active' => true]);
-
-        return Product::create(array_merge([
-            'category_id' => $category->id,
-            'name' => 'Test Product',
-            'slug' => 'test-product-'.uniqid(),
-            'sku' => 'SKU-'.uniqid(),
-            'price' => 500,
-            'stock_quantity' => 10,
-            'is_active' => true,
-        ], $overrides));
+        return $this->createTestProduct($overrides, $variantOverrides);
     }
 }

@@ -8,6 +8,7 @@ use App\Http\Requests\Api\V1\UpdateCartItemRequest;
 use App\Http\Resources\CartResource;
 use App\Models\CartItem;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Services\CartService;
 use Illuminate\Http\JsonResponse;
 
@@ -23,19 +24,22 @@ class CartController extends ApiController
     public function store(StoreCartItemRequest $request): JsonResponse
     {
         $product = Product::where('is_active', true)->findOrFail($request->product_id);
+        $variant = ProductVariant::where('product_id', $product->id)
+            ->where('is_active', true)
+            ->findOrFail($request->product_variant_id);
 
-        if (! $product->is_in_stock) {
-            return $this->error('This product is out of stock.', 422, [
-                'product_id' => ['This product is out of stock.'],
+        if (! $variant->is_in_stock) {
+            return $this->error("Size {$variant->size} is out of stock.", 422, [
+                'product_variant_id' => ["Size {$variant->size} is out of stock."],
             ]);
         }
 
-        $result = $this->cartService->add($product, (int) ($request->quantity ?? 1));
+        $result = $this->cartService->add($product, $variant, (int) ($request->quantity ?? 1));
 
         $payload = $this->cartPayload($result['guest_cart_token']);
 
         if ($result['clamped']) {
-            $payload['message'] = "Only {$product->stock_quantity} in stock — quantity adjusted.";
+            $payload['message'] = "Only {$variant->stock_quantity} in stock — quantity adjusted.";
         }
 
         return $this->success(new CartResource($payload), 201);

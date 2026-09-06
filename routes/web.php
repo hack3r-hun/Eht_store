@@ -9,6 +9,7 @@ use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\ContactController;
 use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\ProductController;
+use App\Http\Controllers\Storefront\SitemapController;
 use App\Http\Controllers\Webhook\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,9 +22,9 @@ Route::get('/products', [ProductController::class, 'index'])->name('products.ind
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
-Route::patch('/cart/{cartItem}', [CartController::class, 'update'])->name('cart.update');
-Route::delete('/cart/{cartItem}', [CartController::class, 'destroy'])->name('cart.destroy');
+Route::post('/cart', [CartController::class, 'store'])->middleware('throttle:60,1')->name('cart.store');
+Route::patch('/cart/{cartItem}', [CartController::class, 'update'])->middleware('throttle:60,1')->name('cart.update');
+Route::delete('/cart/{cartItem}', [CartController::class, 'destroy'])->middleware('throttle:60,1')->name('cart.destroy');
 
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
 Route::get('/checkout/shipping-quote', [CheckoutController::class, 'shippingQuote'])->middleware('throttle:30,1')->name('checkout.shipping-quote');
@@ -34,12 +35,7 @@ Route::get('/checkout/pay/{order}/confirm', [CheckoutController::class, 'confirm
 
 Route::post('/webhooks/stripe', StripeWebhookController::class)->name('webhooks.stripe');
 
-Route::get('/sitemap.xml', function () {
-    $products = \App\Models\Product::where('is_active', true)->get(['slug', 'updated_at']);
-    $content = view('sitemap', compact('products'))->render();
-
-    return response($content, 200)->header('Content-Type', 'application/xml');
-})->name('sitemap');
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

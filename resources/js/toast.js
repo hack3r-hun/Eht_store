@@ -1,9 +1,13 @@
-document.addEventListener('alpine:init', () => {
+export function registerToastStore(Alpine) {
+    if (Alpine.store('toast')) {
+        return;
+    }
+
     Alpine.store('toast', {
         items: [],
 
         push(message, type = 'success', duration = 5000) {
-            if (!message) {
+            if (! message) {
                 return;
             }
 
@@ -21,4 +25,4 @@ document.addEventListener('alpine:init', () => {
     window.showToast = (message, type = 'success') => {
         Alpine.store('toast').push(message, type);
     };
-});
+}

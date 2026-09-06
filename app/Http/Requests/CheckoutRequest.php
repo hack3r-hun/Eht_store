@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\CartIdentity;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -25,7 +26,10 @@ class CheckoutRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
 
-        if (! auth()->check()) {
+        // auth()->check() only looks at the default "web" guard, which a stateless
+        // API bearer-token request never populates — use the same guard-aware
+        // identity resolution as the cart/checkout services instead.
+        if (! CartIdentity::resolve()->userId) {
             $rules['email'] = ['required', 'email', 'max:255'];
         }
 

@@ -23,14 +23,14 @@
             <div class="space-y-3 border-t border-slate-100 pt-4">
                 @foreach($order->items as $item)
                     <div class="flex justify-between text-sm">
-                        <span>{{ $item->product_name }} × {{ $item->quantity }}</span>
+                        <span>{{ $item->product_name }}@if($item->size) ({{ $item->size }})@endif × {{ $item->quantity }}</span>
                         <span class="font-medium">{{ shop_money($item->line_total) }}</span>
                     </div>
                 @endforeach
             </div>
             <div class="border-t border-slate-100 mt-4 pt-4 flex justify-between font-bold text-lg">
                 <span>Total</span>
-                <span class="text-brand-700">{{ shop_money($order->total) }}</span>
+                <span class="text-sage-700">{{ shop_money($order->total) }}</span>
             </div>
         </div>
     </section>

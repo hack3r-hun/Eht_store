@@ -39,6 +39,7 @@ class ContactMessageController extends Controller
         $customers = ContactMessage::selectRaw('email, max(name) as name, count(*) as messages_count, max(created_at) as latest_message_at')
             ->groupBy('email')
             ->orderByDesc('latest_message_at')
+            ->limit(100)
             ->get();
 
         return view('admin.messages.index', compact('messages', 'customers'));
@@ -67,9 +68,12 @@ class ContactMessageController extends Controller
             'message' => $data['message'],
         ]);
 
+        $emailSent = false;
+
         try {
             Mail::to($message->email)->send(new ContactMessageReplyMail($reply->load('contactMessage')));
             $reply->update(['sent_at' => now()]);
+            $emailSent = true;
         } catch (\Throwable $e) {
             Log::warning('Contact reply email failed: '.$e->getMessage(), [
                 'message_id' => $message->id,
@@ -85,7 +89,12 @@ class ContactMessageController extends Controller
 
         return redirect()
             ->route('admin.messages.show', $message)
-            ->with('success', 'Reply saved and sent to the customer.');
+            ->with(
+                $emailSent ? 'success' : 'error',
+                $emailSent
+                    ? 'Reply saved and sent to the customer.'
+                    : 'Reply saved, but the email could not be sent. Check mail settings and try again.'
+            );
     }
 
     public function destroy(ContactMessage $message): RedirectResponse

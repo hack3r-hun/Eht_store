@@ -42,4 +42,13 @@ class ProductImage extends Model
 
         return MediaUrl::resolve($this->path, $fallback);
     }
+
+    public function getThumbUrlAttribute(): string
+    {
+        $fallback = $this->relationLoaded('product')
+            ? MediaUrl::productFallback($this->product?->name)
+            : MediaUrl::productFallback(null);
+
+        return MediaUrl::resolveThumb($this->path, $fallback);
+    }
 }

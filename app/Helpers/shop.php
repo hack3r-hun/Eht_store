@@ -19,7 +19,18 @@ if (! function_exists('shop_config')) {
 
         if (isset($map[$key])) {
             try {
-                if (\Illuminate\Support\Facades\Schema::hasTable('settings')) {
+                // Memoized per-process, then cached: the storefront layout calls
+                // shop_config()/shop_name() ~9 times per page render, and Schema::hasTable()
+                // is an uncached schema introspection query each time it's called directly.
+                static $hasSettingsTable = null;
+
+                $hasSettingsTable ??= \Illuminate\Support\Facades\Cache::remember(
+                    'schema.settings_table_exists',
+                    3600,
+                    fn () => \Illuminate\Support\Facades\Schema::hasTable('settings')
+                );
+
+                if ($hasSettingsTable) {
                     $value = \App\Models\Setting::get($map[$key]);
 
                     if ($value !== null && $value !== '') {

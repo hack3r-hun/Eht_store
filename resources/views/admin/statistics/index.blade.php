@@ -2,13 +2,53 @@
 
 @section('page-title', 'Statistics')
 
+@php
+    $statusChartData = $statusBreakdown->map(function ($row) {
+        $statusValue = is_object($row->status) ? $row->status->value : $row->status;
+        $enum = \App\Enums\OrderStatus::tryFrom($statusValue);
+
+        return [
+            'label' => $enum?->label() ?? str_replace('_', ' ', (string) $statusValue),
+            'count' => (int) $row->orders_count,
+            'color' => $enum?->color() ?? 'slate',
+        ];
+    })->values();
+
+    $paymentChartData = $paymentBreakdown->map(function ($row) {
+        $method = is_object($row->payment_method) ? $row->payment_method->value : $row->payment_method;
+        $status = is_object($row->payment_status) ? $row->payment_status->value : $row->payment_status;
+
+        return [
+            'label' => strtoupper((string) $method).' · '.ucfirst((string) $status),
+            'count' => (int) $row->orders_count,
+        ];
+    })->values();
+
+    $topProductsChartData = $topProducts->map(fn ($row) => [
+        'label' => \Illuminate\Support\Str::limit($row->product_name, 20),
+        'count' => (int) $row->units_sold,
+    ])->values();
+
+    $trendChartData = $trend->map(fn ($row) => [
+        'label' => (string) $row->bucket,
+        'revenue' => (float) ($row->revenue ?? 0),
+    ])->values();
+
+    $chartPayload = [
+        'statusBreakdown' => $statusChartData,
+        'paymentBreakdown' => $paymentChartData,
+        'topProducts' => $topProductsChartData,
+        'trend' => $trendChartData,
+    ];
+@endphp
+
 @section('content')
     <x-reveal type="fade-up">
         <x-admin-page-header subtitle="Performance overview for {{ $start->format('M d, Y') }} to {{ $end->format('M d, Y') }}" />
     </x-reveal>
 
     <x-reveal type="fade-up" delay="40">
-        <form method="GET" class="admin-card mb-6 grid grid-cols-1 md:grid-cols-4 gap-3 items-center" x-data="{ period: '{{ $period }}' }">
+        <form method="GET" class="admin-filter-bar grid grid-cols-1 md:grid-cols-4 gap-3 items-center" x-data="{ period: '{{ $period }}' }">
             <select name="period" x-model="period" class="input-field" @change="if (period !== 'custom') $el.form.submit()">
                 <option value="day">Today</option>
                 <option value="month">This Month</option>
@@ -26,18 +66,20 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
         @foreach([
-            ['label' => 'Paid Revenue', 'value' => shop_money($summary['paid_revenue']), 'icon' => 'currency', 'bg' => 'from-sage-500 to-sage-700'],
-            ['label' => 'Orders', 'value' => $summary['orders'], 'icon' => 'cart', 'bg' => 'from-charcoal-500 to-charcoal-700'],
-            ['label' => 'Average Order', 'value' => shop_money($summary['average_order'] ?? 0), 'icon' => 'chart', 'bg' => 'from-terracotta-400 to-terracotta-600'],
-            ['label' => 'New Customers', 'value' => $summary['new_customers'], 'icon' => 'users', 'bg' => 'from-oat-500 to-oat-700'],
+            ['label' => 'Paid Revenue', 'value' => shop_money($summary['paid_revenue']), 'icon' => 'currency', 'tint' => 'bg-sage-50 text-sage-700'],
+            ['label' => 'Orders', 'value' => $summary['orders'], 'icon' => 'cart', 'tint' => 'bg-slate-100 text-slate-700'],
+            ['label' => 'Average Order', 'value' => shop_money($summary['average_order'] ?? 0), 'icon' => 'chart', 'tint' => 'bg-gold-50 text-gold-700'],
+            ['label' => 'New Customers', 'value' => $summary['new_customers'], 'icon' => 'users', 'tint' => 'bg-terracotta-50 text-terracotta-600'],
         ] as $i => $card)
             <x-reveal type="fade-up" :delay="$i * 60">
-                <div class="admin-stat-card h-full bg-gradient-to-br {{ $card['bg'] }} shadow-lg">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-white/80 text-sm font-medium">{{ $card['label'] }}</span>
-                        <x-icon :name="$card['icon']" class="w-6 h-6 text-white/90" />
+                <div class="admin-stat-card h-full">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <span class="admin-stat-label">{{ $card['label'] }}</span>
+                        <span class="admin-stat-icon {{ $card['tint'] }}">
+                            <x-icon :name="$card['icon']" class="w-5 h-5" />
+                        </span>
                     </div>
-                    <p class="text-3xl font-bold">{{ $card['value'] }}</p>
+                    <p class="admin-stat-value">{{ $card['value'] }}</p>
                 </div>
             </x-reveal>
         @endforeach
@@ -45,12 +87,12 @@
 
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         @foreach([
-            ['label' => 'Active Products', 'value' => $summary['active_products'].' / '.$summary['products'], 'icon' => 'cube', 'bg' => 'bg-charcoal-100', 'text' => 'text-charcoal-700'],
+            ['label' => 'Active Products', 'value' => $summary['active_products'].' / '.$summary['products'], 'icon' => 'cube', 'bg' => 'bg-slate-100', 'text' => 'text-slate-700'],
             ['label' => 'Low Stock', 'value' => $summary['low_stock'], 'icon' => 'warning', 'bg' => 'bg-red-100', 'text' => 'text-red-700'],
             ['label' => 'Messages', 'value' => $summary['messages'], 'icon' => 'mail', 'bg' => 'bg-terracotta-50', 'text' => 'text-terracotta-600'],
             ['label' => 'Range', 'value' => $period, 'icon' => 'calendar', 'bg' => 'bg-oat-100', 'text' => 'text-oat-700'],
         ] as $item)
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-card p-5 h-full">
+            <div class="admin-card admin-card-pad h-full">
                 <div class="flex items-center gap-3 h-full">
                     <div class="w-11 h-11 rounded-xl {{ $item['bg'] }} {{ $item['text'] }} flex items-center justify-center">
                         <x-icon :name="$item['icon']" class="w-5 h-5" />
@@ -66,7 +108,12 @@
 
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
         <div class="admin-card">
-            <h2 class="font-bold text-slate-900 mb-4">Order Status Breakdown</h2>
+            <div class="admin-card-pad pb-0">
+                <h2 class="font-bold text-slate-900 mb-4">Order Status Breakdown</h2>
+                @if($statusChartData->isNotEmpty())
+                    <div class="h-56 mb-2"><canvas id="chart-status-breakdown"></canvas></div>
+                @endif
+            </div>
             <div class="overflow-x-auto">
                 <table class="admin-table">
                     <thead><tr><th>Status</th><th>Orders</th><th>Revenue</th></tr></thead>
@@ -86,7 +133,12 @@
         </div>
 
         <div class="admin-card">
-            <h2 class="font-bold text-slate-900 mb-4">Payment Breakdown</h2>
+            <div class="admin-card-pad pb-0">
+                <h2 class="font-bold text-slate-900 mb-4">Payment Breakdown</h2>
+                @if($paymentChartData->isNotEmpty())
+                    <div class="h-56 mb-2"><canvas id="chart-payment-breakdown"></canvas></div>
+                @endif
+            </div>
             <div class="overflow-x-auto">
                 <table class="admin-table">
                     <thead><tr><th>Method</th><th>Status</th><th>Orders</th><th>Revenue</th></tr></thead>
@@ -109,7 +161,12 @@
 
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div class="admin-card">
-            <h2 class="font-bold text-slate-900 mb-4">Top Products</h2>
+            <div class="admin-card-pad pb-0">
+                <h2 class="font-bold text-slate-900 mb-4">Top Products</h2>
+                @if($topProductsChartData->isNotEmpty())
+                    <div class="h-56 mb-2"><canvas id="chart-top-products"></canvas></div>
+                @endif
+            </div>
             <div class="overflow-x-auto">
                 <table class="admin-table">
                     <thead><tr><th>Product</th><th>Units</th><th>Revenue</th></tr></thead>
@@ -132,7 +189,12 @@
         </div>
 
         <div class="admin-card">
-            <h2 class="font-bold text-slate-900 mb-4">{{ $period === 'year' ? 'Monthly' : 'Daily' }} Trend</h2>
+            <div class="admin-card-pad pb-0">
+                <h2 class="font-bold text-slate-900 mb-4">{{ $period === 'year' ? 'Monthly' : 'Daily' }} Trend</h2>
+                @if($trendChartData->isNotEmpty())
+                    <div class="h-56 mb-2"><canvas id="chart-trend"></canvas></div>
+                @endif
+            </div>
             <div class="overflow-x-auto">
                 <table class="admin-table">
                     <thead><tr><th>Period</th><th>Orders</th><th>Revenue</th></tr></thead>
@@ -151,4 +213,7 @@
             </div>
         </div>
     </div>
+
+    {{-- Inert data blob (not executed as script) read by admin-charts.js — no CSP nonce needed. --}}
+    <script type="application/json" id="stats-chart-data">@json($chartPayload)</script>
 @endsection

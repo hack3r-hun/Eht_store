@@ -5,8 +5,12 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\User;
+use App\Support\ImageProcessor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -32,15 +36,81 @@ class AdminProductTest extends TestCase
             'category_id' => $category->id,
             'name' => 'New LED Bulb',
             'sku' => 'LED-NEW',
-            'price' => 350,
-            'stock_quantity' => 50,
             'is_active' => true,
+            'variants' => $this->sizeVariantsPayload(['S', 'M', 'L'], 350, 50, [
+                'S' => ['price' => 300, 'stock_quantity' => 10],
+                'M' => ['price' => 350, 'stock_quantity' => 20],
+                'L' => ['price' => 400, 'stock_quantity' => 20],
+            ]),
         ]);
 
         $product = Product::where('sku', 'LED-NEW')->first();
 
         $response->assertRedirect(route('admin.products.edit', $product));
         $this->assertDatabaseHas('products', ['sku' => 'LED-NEW']);
+        $this->assertDatabaseHas('product_variants', ['product_id' => $product->id, 'size' => 'S', 'price' => 300]);
+        $this->assertDatabaseHas('product_variants', ['product_id' => $product->id, 'size' => 'M', 'price' => 350]);
+        $this->assertDatabaseCount('product_variants', 3);
+        $this->assertEquals(50, $product->stock_quantity);
+    }
+
+    public function test_admin_can_deactivate_product(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $category = Category::create(['name' => 'Bulbs', 'slug' => 'bulbs', 'is_active' => true]);
+        $product = $this->createTestProduct([
+            'category_id' => $category->id,
+            'name' => 'LED Bulb',
+            'slug' => 'led-bulb',
+            'sku' => 'LED-1',
+            'price' => 100,
+            'stock_quantity' => 5,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($admin)->put(route('admin.products.update', $product), [
+            'category_id' => $category->id,
+            'name' => 'LED Bulb',
+            'sku' => 'LED-1',
+            'is_active' => '0',
+            'is_featured' => '0',
+            'variants' => $this->sizeVariantsPayload(['M'], 100, 5),
+        ])->assertRedirect();
+
+        $this->assertFalse($product->fresh()->is_active);
+    }
+
+    public function test_uploaded_product_image_is_resized_and_thumbnailed(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $category = Category::create(['name' => 'Bulbs', 'slug' => 'bulbs', 'is_active' => true]);
+
+        $this->actingAs($admin)->post(route('admin.products.store'), [
+            'category_id' => $category->id,
+            'name' => 'Photographed Bulb',
+            'sku' => 'PHOTO-1',
+            'is_active' => true,
+            'variants' => $this->sizeVariantsPayload(['M'], 100, 5),
+            'images' => [UploadedFile::fake()->image('bulb.jpg', 2000, 1000)],
+        ])->assertRedirect();
+
+        $product = Product::where('sku', 'PHOTO-1')->firstOrFail();
+        $image = ProductImage::where('product_id', $product->id)->firstOrFail();
+
+        Storage::disk('public')->assertExists($image->path);
+        Storage::disk('public')->assertExists(ImageProcessor::thumbPath($image->path));
+
+        $detailSize = getimagesizefromstring(Storage::disk('public')->get($image->path));
+        $thumbSize = getimagesizefromstring(Storage::disk('public')->get(ImageProcessor::thumbPath($image->path)));
+
+        $this->assertLessThanOrEqual(1600, $detailSize[0]);
+        $this->assertSame([500, 500], [$thumbSize[0], $thumbSize[1]]);
     }
 
     public function test_non_admin_cannot_access_admin_products(): void
@@ -105,8 +175,7 @@ class AdminProductTest extends TestCase
             'category_id' => $category->id,
             'name' => 'Hacked',
             'sku' => 'HAX-1',
-            'price' => 1,
-            'stock_quantity' => 1,
+            'variants' => $this->sizeVariantsPayload(['M'], 1, 1),
         ];
 
         $this->actingAs($user)->post(route('admin.products.store'), $payload)->assertForbidden();

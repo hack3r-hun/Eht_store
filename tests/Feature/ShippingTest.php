@@ -27,21 +27,16 @@ class ShippingTest extends TestCase
         Role::create(['name' => 'admin']);
     }
 
-    protected function makeProduct(float $price = 500): Product
+    protected function makeProduct(float $price = 500)
     {
-        $category = Category::firstOrCreate(
-            ['slug' => 'test'],
-            ['name' => 'Test', 'is_active' => true]
-        );
-
-        return Product::create([
-            'category_id' => $category->id,
+        return $this->createTestProduct([
             'name' => 'Coaster '.uniqid(),
             'slug' => 'coaster-'.uniqid(),
             'sku' => 'C-'.uniqid(),
             'price' => $price,
             'stock_quantity' => 20,
-            'is_active' => true,
+            'category_slug' => 'test',
+            'category_name' => 'Test',
         ]);
     }
 
@@ -77,9 +72,10 @@ class ShippingTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole('customer');
         $product = $this->makeProduct(500);
+        $variant = $this->defaultVariant($product);
 
         $this->actingAs($user);
-        app(CartService::class)->add($product, 1);
+        app(CartService::class)->add($product, $variant, 1);
 
         $this->post(route('checkout.store'), [
             'full_name' => 'Test User',
@@ -100,9 +96,10 @@ class ShippingTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole('customer');
         $product = $this->makeProduct(500);
+        $variant = $this->defaultVariant($product);
 
         $this->actingAs($user);
-        app(CartService::class)->add($product, 1);
+        app(CartService::class)->add($product, $variant, 1);
 
         $this->post(route('checkout.store'), [
             'full_name' => 'Test User',
@@ -122,9 +119,10 @@ class ShippingTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole('customer');
         $product = $this->makeProduct(6000);
+        $variant = $this->defaultVariant($product);
 
         $this->actingAs($user);
-        app(CartService::class)->add($product, 1);
+        app(CartService::class)->add($product, $variant, 1);
 
         $this->post(route('checkout.store'), [
             'full_name' => 'Test User',
@@ -144,9 +142,10 @@ class ShippingTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole('customer');
         $product = $this->makeProduct(500);
+        $variant = $this->defaultVariant($product);
 
         $this->actingAs($user);
-        app(CartService::class)->add($product, 1);
+        app(CartService::class)->add($product, $variant, 1);
 
         $this->getJson(route('checkout.shipping-quote', ['city' => 'Karachi']))
             ->assertOk()

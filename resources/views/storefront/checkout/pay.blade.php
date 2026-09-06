@@ -5,7 +5,7 @@
 @section('content')
     <section class="max-w-lg mx-auto px-4 py-12">
         <h1 class="section-title mb-2 text-center">Complete Payment</h1>
-        <p class="text-center text-charcoal-500 mb-8">Order {{ $order->order_number }} - {{ shop_money($order->total) }}</p>
+        <p class="text-center text-slate-500 mb-8">Order {{ $order->order_number }} - {{ shop_money($order->total) }}</p>
 
         <div class="bg-white rounded-2xl border border-oat-200 shadow-card p-6">
             <div id="payment-element" class="mb-6"></div>
@@ -16,7 +16,7 @@
 
     @if($stripeKey && $clientSecret)
     <script src="https://js.stripe.com/v3/"></script>
-    <script>
+    <script nonce="{{ $cspNonce }}">
         const stripe = Stripe(@json($stripeKey));
         const elements = stripe.elements({ clientSecret: @json($clientSecret) });
         const paymentElement = elements.create('payment');

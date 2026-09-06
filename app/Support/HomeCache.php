@@ -12,6 +12,9 @@ class HomeCache
         'home.featured_products',
         'home.categories',
         'home.latest_products',
+        'sitemap.xml',
+        'admin.dashboard.stats',
+        'admin.dashboard.stats.api',
     ];
 
     public static function flush(): void

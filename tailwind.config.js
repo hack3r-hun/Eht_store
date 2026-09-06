@@ -15,18 +15,23 @@ export default {
                 sans: ['DM Sans', ...defaultTheme.fontFamily.sans],
             },
             colors: {
-                brand: {
-                    50: '#F5F5DC',
-                    100: '#efedca',
-                    200: '#dfd99f',
-                    300: '#cfc174',
-                    400: '#b7a45d',
-                    500: '#8A9A5B',
-                    600: '#71804b',
-                    700: '#59653b',
-                    800: '#434d30',
-                    900: '#36454F',
+                // Sparing tertiary accent — muted gold, used only for Sale badges,
+                // star ratings, and rare one-off highlights ("Cream + Terracotta +
+                // Gold" direction).
+                gold: {
+                    DEFAULT: '#C9A227',
+                    50: '#fbf6e7',
+                    100: '#f5eac4',
+                    200: '#ead590',
+                    300: '#debf5d',
+                    400: '#d3ac3f',
+                    500: '#C9A227',
+                    600: '#a6841f',
+                    700: '#82661a',
+                    800: '#5e4a14',
+                    900: '#3d2f0d',
                 },
+                // Secondary accent — unchanged.
                 sage: {
                     DEFAULT: '#8A9A5B',
                     50: '#f1f3e8',
@@ -40,32 +45,39 @@ export default {
                     800: '#434b2d',
                     900: '#2f3521',
                 },
+                // Primary accent — hex bug fixed: true brand hex is now correctly
+                // at 500 (previously 500 was an off-shade, #d75e45, one step away
+                // from the real brand color #E2725B stored at 400).
                 terracotta: {
                     DEFAULT: '#E2725B',
-                    50: '#fdf1ee',
-                    100: '#f9ddd6',
-                    200: '#f2b9aa',
-                    300: '#eb957f',
-                    400: '#E2725B',
-                    500: '#d75e45',
-                    600: '#b74834',
-                    700: '#91392c',
-                    800: '#6f2f27',
+                    50: '#fdf3f0',
+                    100: '#fbe6e0',
+                    200: '#f5c7ba',
+                    300: '#eea890',
+                    400: '#e68f70',
+                    500: '#E2725B',
+                    600: '#c15a44',
+                    700: '#9c4635',
+                    800: '#78372a',
                     900: '#4d231f',
                 },
+                // Warm-neutral surface/background family — lightened base to
+                // match the new warm-white (#FBF7F2), was cream #F5F5DC.
                 oat: {
-                    DEFAULT: '#F5F5DC',
-                    50: '#fffef4',
-                    100: '#F5F5DC',
-                    200: '#e8e5bf',
-                    300: '#d6cf98',
-                    400: '#c0b36f',
-                    500: '#a89751',
-                    600: '#89773e',
-                    700: '#6b5b32',
-                    800: '#504429',
-                    900: '#362f20',
+                    DEFAULT: '#FBF7F2',
+                    50: '#fefcfa',
+                    100: '#FBF7F2',
+                    200: '#f1e7dc',
+                    300: '#e4d2bf',
+                    400: '#d3b896',
+                    500: '#bc9b72',
+                    600: '#9b7d57',
+                    700: '#786047',
+                    800: '#564636',
+                    900: '#362e24',
                 },
+                // Headings/ink — kept for headings only; body/meta text uses
+                // Tailwind's stock slate scale instead (see app.css/views).
                 charcoal: {
                     DEFAULT: '#36454F',
                     50: '#eef1f2',

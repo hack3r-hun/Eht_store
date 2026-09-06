@@ -73,6 +73,17 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Dedicated channel for auth/authz security events (failed logins, lockouts,
+        // privilege-escalation attempts) — kept separate from general app noise so it's
+        // cheap to tail/ship to a SIEM or alert on independently (OWASP A09 logging).
+        'security' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/security.log'),
+            'level' => 'info',
+            'days' => env('LOG_SECURITY_DAYS', 90),
+            'replace_placeholders' => true,
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),

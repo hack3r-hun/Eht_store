@@ -117,7 +117,9 @@ class CheckoutController extends ApiController
     protected function authorizeOrder(Request $request, Order $order): void
     {
         if ($order->user_id) {
-            if (! $request->user() || $request->user()->id !== $order->user_id) {
+            $user = $request->user('sanctum');
+
+            if (! $user || $user->id !== $order->user_id) {
                 abort(403);
             }
 

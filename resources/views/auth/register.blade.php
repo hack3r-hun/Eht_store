@@ -40,9 +40,9 @@
             <div class="store-grid-2 gap-3">
                 <label class="relative cursor-pointer">
                     <input type="radio" name="verification_method" value="link" class="peer sr-only" @checked(old('verification_method', 'link') === 'link') required>
-                    <div class="store-card p-4 border-2 border-transparent peer-checked:border-brand-500 peer-checked:bg-brand-50/50 transition-all">
+                    <div class="store-card p-4 border-2 border-transparent peer-checked:border-sage-500 peer-checked:bg-sage-50/50 transition-all">
                         <div class="flex items-center gap-3">
-                            <x-icon name="mail" class="w-6 h-6 text-brand-600 shrink-0" />
+                            <x-icon name="mail" class="w-6 h-6 text-sage-600 shrink-0" />
                             <div>
                                 <p class="font-semibold text-slate-900 text-sm">Email Link</p>
                                 <p class="text-xs text-slate-500">Click link in your inbox</p>
@@ -52,9 +52,9 @@
                 </label>
                 <label class="relative cursor-pointer">
                     <input type="radio" name="verification_method" value="otp" class="peer sr-only" @checked(old('verification_method') === 'otp')>
-                    <div class="store-card p-4 border-2 border-transparent peer-checked:border-brand-500 peer-checked:bg-brand-50/50 transition-all">
+                    <div class="store-card p-4 border-2 border-transparent peer-checked:border-sage-500 peer-checked:bg-sage-50/50 transition-all">
                         <div class="flex items-center gap-3">
-                            <x-icon name="check-circle" class="w-6 h-6 text-brand-600 shrink-0" />
+                            <x-icon name="check-circle" class="w-6 h-6 text-sage-600 shrink-0" />
                             <div>
                                 <p class="font-semibold text-slate-900 text-sm">OTP Code</p>
                                 <p class="text-xs text-slate-500">6-digit code via email</p>
@@ -71,7 +71,7 @@
 
         <p class="text-center text-sm text-slate-500">
             Already have an account?
-            <a href="{{ route('login') }}" class="text-brand-700 font-medium hover:text-brand-800">Sign in</a>
+            <a href="{{ route('login') }}" class="text-sage-700 font-medium hover:text-sage-800">Sign in</a>
         </p>
     </form>
 </x-guest-layout>

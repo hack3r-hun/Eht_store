@@ -89,9 +89,13 @@ class PaymentService
             return false;
         }
 
+        // Every intent this app creates carries metadata.order_id (see createPaymentIntent()).
+        // Require it explicitly rather than only checking it when present, so a same-amount
+        // PaymentIntent created without that metadata can never be used to mark an unrelated
+        // order as paid.
         $metadataOrderId = $intent->metadata['order_id'] ?? null;
 
-        if ($metadataOrderId !== null && (int) $metadataOrderId !== $order->id) {
+        if ($metadataOrderId === null || (int) $metadataOrderId !== $order->id) {
             return false;
         }
 

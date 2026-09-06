@@ -12,7 +12,7 @@
     </x-reveal>
 
     <x-reveal type="fade-up" delay="60">
-        <form method="GET" class="admin-card mb-6 flex flex-col sm:flex-row gap-3">
+        <form method="GET" class="admin-filter-bar flex flex-col sm:flex-row">
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Search archived name or SKU" class="input-field flex-1">
             <button type="submit" class="btn-primary !py-2.5 !px-5 text-sm">Search</button>
             <a href="{{ route('admin.products.archived') }}" class="btn-outline !py-2.5 !px-5 text-sm">Reset</a>

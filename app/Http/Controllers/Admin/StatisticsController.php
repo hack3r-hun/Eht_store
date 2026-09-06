@@ -9,59 +9,73 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\InventoryService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class StatisticsController extends Controller
 {
+    public function __construct(protected InventoryService $inventoryService) {}
+
     public function index(Request $request): View
     {
         [$start, $end, $period] = $this->dateRange($request);
 
-        $ordersInRange = Order::whereBetween('created_at', [$start, $end]);
-        $paidOrdersInRange = (clone $ordersInRange)->where('payment_status', PaymentStatus::Paid);
+        // This page runs ~10 queries (several GROUP BY/date-bucketed) per view with no
+        // caching previously — short TTL keyed by the resolved date range keeps repeated
+        // views/filter toggles from re-running them every time.
+        $cacheKey = 'admin.statistics.'.md5($period.'|'.$start->toDateTimeString().'|'.$end->toDateTimeString());
 
-        $summary = [
-            'orders' => (clone $ordersInRange)->count(),
-            'paid_revenue' => (float) (clone $paidOrdersInRange)->sum('total'),
-            'average_order' => (float) (clone $ordersInRange)->avg('total'),
-            'new_customers' => User::role('customer')->whereBetween('created_at', [$start, $end])->count(),
-            'products' => Product::count(),
-            'active_products' => Product::where('is_active', true)->count(),
-            'low_stock' => Product::whereColumn('stock_quantity', '<=', 'low_stock_threshold')->count(),
-            'messages' => ContactMessage::whereBetween('created_at', [$start, $end])->count(),
-        ];
+        [$summary, $statusBreakdown, $paymentBreakdown, $topProducts, $trend] = Cache::remember($cacheKey, 60, function () use ($start, $end, $period) {
+            $ordersInRange = Order::whereBetween('created_at', [$start, $end]);
+            $paidOrdersInRange = (clone $ordersInRange)->where('payment_status', PaymentStatus::Paid);
 
-        $statusBreakdown = (clone $ordersInRange)
-            ->select('status', DB::raw('count(*) as orders_count'), DB::raw('sum(total) as revenue'))
-            ->groupBy('status')
-            ->orderByDesc('orders_count')
-            ->get();
+            $summary = [
+                'orders' => (clone $ordersInRange)->count(),
+                'paid_revenue' => (float) (clone $paidOrdersInRange)->sum('total'),
+                'average_order' => (float) (clone $ordersInRange)->avg('total'),
+                'new_customers' => User::role('customer')->whereBetween('created_at', [$start, $end])->count(),
+                'products' => Product::count(),
+                'active_products' => Product::where('is_active', true)->count(),
+                // Per-variant aware: Product.stock_quantity is a rolled-up sum across sizes.
+                'low_stock' => $this->inventoryService->lowStockCount(),
+                'messages' => ContactMessage::whereBetween('created_at', [$start, $end])->count(),
+            ];
 
-        $paymentBreakdown = (clone $ordersInRange)
-            ->select('payment_method', 'payment_status', DB::raw('count(*) as orders_count'), DB::raw('sum(total) as revenue'))
-            ->groupBy('payment_method', 'payment_status')
-            ->orderByDesc('orders_count')
-            ->get();
+            $statusBreakdown = (clone $ordersInRange)
+                ->select('status', DB::raw('count(*) as orders_count'), DB::raw('sum(total) as revenue'))
+                ->groupBy('status')
+                ->orderByDesc('orders_count')
+                ->get();
 
-        $topProducts = OrderItem::query()
-            ->whereHas('order', fn ($query) => $query->whereBetween('created_at', [$start, $end]))
-            ->select('product_name', 'product_sku', DB::raw('sum(quantity) as units_sold'), DB::raw('sum(line_total) as revenue'))
-            ->groupBy('product_name', 'product_sku')
-            ->orderByDesc('revenue')
-            ->take(10)
-            ->get();
+            $paymentBreakdown = (clone $ordersInRange)
+                ->select('payment_method', 'payment_status', DB::raw('count(*) as orders_count'), DB::raw('sum(total) as revenue'))
+                ->groupBy('payment_method', 'payment_status')
+                ->orderByDesc('orders_count')
+                ->get();
 
-        $bucketExpression = $this->bucketExpression($period);
+            $topProducts = OrderItem::query()
+                ->whereHas('order', fn ($query) => $query->whereBetween('created_at', [$start, $end]))
+                ->select('product_name', 'product_sku', DB::raw('sum(quantity) as units_sold'), DB::raw('sum(line_total) as revenue'))
+                ->groupBy('product_name', 'product_sku')
+                ->orderByDesc('revenue')
+                ->take(10)
+                ->get();
 
-        $trend = Order::whereBetween('created_at', [$start, $end])
-            ->selectRaw("{$bucketExpression} as bucket")
-            ->selectRaw('count(*) as orders_count, sum(total) as revenue')
-            ->groupBy('bucket')
-            ->orderBy('bucket')
-            ->get();
+            $bucketExpression = $this->bucketExpression($period);
+
+            $trend = Order::whereBetween('created_at', [$start, $end])
+                ->selectRaw("{$bucketExpression} as bucket")
+                ->selectRaw('count(*) as orders_count, sum(total) as revenue')
+                ->groupBy('bucket')
+                ->orderBy('bucket')
+                ->get();
+
+            return [$summary, $statusBreakdown, $paymentBreakdown, $topProducts, $trend];
+        });
 
         return view('admin.statistics.index', compact(
             'summary',

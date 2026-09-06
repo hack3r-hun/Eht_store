@@ -6,66 +6,62 @@
     'item' => null,
     'confirmLabel' => 'Delete',
     'formId' => null,
+    'variant' => 'danger', // 'danger' | 'neutral' — neutral is for non-destructive actions
+    'triggerIcon' => 'trash',
+    'triggerClass' => null, // override the default small text-link trigger styling
+    'triggerShowIcon' => true, // set false when the slot already conveys the action (e.g. a bare "×")
 ])
 
+@php
+    $isDanger = $variant !== 'neutral';
+@endphp
+
+{{--
+    Native <dialog> stays closed until showModal(). No Alpine x-show, so tabs
+    never show a stuck Archive/Delete overlay on load.
+    Teleported to <body> so DELETE forms are never nested inside another form.
+--}}
 <div
-    x-data="{ open: false }"
-    x-effect="document.body.classList.toggle('overflow-hidden', open)"
+    x-data="{
+        open() {
+            this.$refs.dlg.showModal();
+        },
+        close() {
+            this.$refs.dlg.close();
+        },
+    }"
     {{ $attributes->class(['inline-flex']) }}
 >
     <button
         type="button"
-        @click="open = true"
-        class="inline-flex items-center gap-1.5 text-red-500 font-semibold text-sm hover:text-red-700 transition-colors"
+        @click.stop="open()"
+        class="{{ $triggerClass ?? ('inline-flex items-center gap-1.5 font-semibold text-sm transition-colors ' . ($isDanger ? 'text-red-500 hover:text-red-700' : 'text-sage-700 hover:text-sage-800')) }}"
     >
-        <x-icon name="trash" class="w-4 h-4" />
+        @if($triggerShowIcon)
+            <x-icon :name="$triggerIcon" class="w-4 h-4" />
+        @endif
         {{ $slot->isEmpty() ? 'Delete' : $slot }}
     </button>
 
     <template x-teleport="body">
-        <div
-            x-show="open"
-            x-cloak
-            class="confirm-modal"
-            role="dialog"
-            aria-modal="true"
-            :aria-label="{{ json_encode($title) }}"
-            @keydown.escape.window="open = false"
+        <dialog
+            x-ref="dlg"
+            class="confirm-dialog"
+            aria-label="{{ $title }}"
+            @click.self="close()"
         >
-            <div
-                class="confirm-modal-backdrop"
-                x-show="open"
-                x-transition:enter="ease-out duration-200"
-                x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100"
-                x-transition:leave="ease-in duration-150"
-                x-transition:leave-start="opacity-100"
-                x-transition:leave-end="opacity-0"
-                @click="open = false"
-            ></div>
-
-            <div
-                class="confirm-modal-panel"
-                x-show="open"
-                x-transition:enter="ease-out duration-300"
-                x-transition:enter-start="opacity-0 scale-95 translate-y-4"
-                x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                x-transition:leave="ease-in duration-200"
-                x-transition:leave-start="opacity-100 scale-100"
-                x-transition:leave-end="opacity-0 scale-95 translate-y-2"
-                @click.stop
-            >
+            <div class="confirm-dialog-panel" @click.stop>
                 <button
                     type="button"
-                    @click="open = false"
+                    @click="close()"
                     class="confirm-modal-close"
                     aria-label="Close"
                 >
                     <x-icon name="x" class="w-5 h-5" />
                 </button>
 
-                <div class="confirm-modal-icon">
-                    <x-icon name="trash" class="w-7 h-7" />
+                <div class="confirm-modal-icon {{ $isDanger ? 'confirm-modal-icon-danger' : 'confirm-modal-icon-neutral' }}">
+                    <x-icon :name="$triggerIcon" class="w-7 h-7" />
                 </div>
 
                 <h3 class="confirm-modal-title">{{ $title }}</h3>
@@ -78,11 +74,11 @@
 
                 @if($formId)
                 <div class="confirm-modal-actions">
-                    <button type="button" @click="open = false" class="btn-outline !py-2.5 !px-5 text-sm w-full sm:w-auto">
+                    <button type="button" @click="close()" class="btn-outline !py-2.5 !px-5 text-sm w-full sm:w-auto">
                         Cancel
                     </button>
-                    <button type="submit" form="{{ $formId }}" class="btn-danger !py-2.5 !px-5 text-sm w-full sm:w-auto">
-                        <x-icon name="trash" class="w-4 h-4" />
+                    <button type="submit" form="{{ $formId }}" @click="close()" class="{{ $isDanger ? 'btn-danger' : 'btn-primary' }} !py-2.5 !px-5 text-sm w-full sm:w-auto">
+                        <x-icon :name="$triggerIcon" class="w-4 h-4" />
                         {{ $confirmLabel }}
                     </button>
                 </div>
@@ -90,16 +86,16 @@
                 <form method="POST" action="{{ $action }}" class="confirm-modal-actions">
                     @csrf
                     @method($method)
-                    <button type="button" @click="open = false" class="btn-outline !py-2.5 !px-5 text-sm w-full sm:w-auto">
+                    <button type="button" @click="close()" class="btn-outline !py-2.5 !px-5 text-sm w-full sm:w-auto">
                         Cancel
                     </button>
-                    <button type="submit" class="btn-danger !py-2.5 !px-5 text-sm w-full sm:w-auto">
-                        <x-icon name="trash" class="w-4 h-4" />
+                    <button type="submit" class="{{ $isDanger ? 'btn-danger' : 'btn-primary' }} !py-2.5 !px-5 text-sm w-full sm:w-auto">
+                        <x-icon :name="$triggerIcon" class="w-4 h-4" />
                         {{ $confirmLabel }}
                     </button>
                 </form>
                 @endif
             </div>
-        </div>
+        </dialog>
     </template>
 </div>

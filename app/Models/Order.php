@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
+use App\Support\HomeCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,6 +14,12 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Order extends Model
 {
     public ?string $plain_guest_access_token_for_api = null;
+
+    protected static function booted(): void
+    {
+        static::saved(fn () => HomeCache::flush());
+        static::deleted(fn () => HomeCache::flush());
+    }
 
     protected $fillable = [
         'user_id',

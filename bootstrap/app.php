@@ -1,11 +1,9 @@
 <?php
 
-use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -16,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
         then: function () {
             if (! app()->environment('production')) {
-                Route::middleware(['auth:sanctum', 'admin'])
+                Route::middleware(['auth:sanctum', 'ability:admin', 'admin'])
                     ->get('/_diag', function () {
                         $checks = [];
 
@@ -47,15 +45,23 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Behind a known reverse proxy (Railway, Cloudflare, nginx), "*" is fine.
+        // Document TRUSTED_PROXIES if you need to restrict later.
         $middleware->trustProxies(at: '*');
 
         $middleware->web(append: [
             \App\Http\Middleware\SecurityHeaders::class,
         ]);
 
+        $middleware->api(append: [
+            \App\Http\Middleware\SecurityHeaders::class,
+        ]);
+
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
             'verified.api' => \App\Http\Middleware\EnsureApiEmailVerified::class,
+            'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
+            'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
@@ -67,7 +73,3 @@ return Application::configure(basePath: dirname(__DIR__))
             return $request->is('api/*') || $request->expectsJson();
         });
     })->create();
-
-RateLimiter::for('api', function (Request $request) {
-    return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
-});

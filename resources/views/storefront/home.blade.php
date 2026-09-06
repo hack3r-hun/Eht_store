@@ -5,36 +5,58 @@
 @section('content')
     @php $homeMeta = \App\Models\Page::where('slug', 'home')->first()?->meta ?? []; @endphp
 
-    <section class="relative overflow-hidden bg-gradient-to-br from-oat-100 via-white to-sage-50 border-b border-oat-200">
-        <div class="absolute inset-x-0 bottom-0 h-24 bg-mesh opacity-60 pointer-events-none"></div>
+    <section class="hero-section">
+        <div class="absolute inset-x-0 bottom-0 h-24 bg-mesh opacity-60 pointer-events-none animate-drift"></div>
+        {{-- Ambient aurora glow — pure CSS, transform/opacity only, skipped under reduced-motion --}}
+        <div class="absolute -top-24 left-1/4 w-96 h-96 rounded-full bg-terracotta-300/20 blur-3xl pointer-events-none animate-drift"></div>
+        <div class="absolute top-1/3 -right-16 w-80 h-80 rounded-full bg-sage-300/20 blur-3xl pointer-events-none animate-drift animation-delay-400"></div>
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20 w-full">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 <div>
                     <x-reveal type="fade-up">
-                        <span class="inline-block px-4 py-1.5 rounded-full bg-white text-sage-700 text-sm font-semibold mb-6 border border-sage-200 shadow-card">Handmade in Karachi</span>
-                        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] mb-6 text-charcoal-700">
+                        <span class="hero-eyebrow">Handmade in Karachi</span>
+                    </x-reveal>
+                    <x-reveal type="fade-up" delay="120">
+                        <h1 class="hero-title">
                             {{ $homeMeta['hero_title'] ?? 'Handcrafted Crochet & Knit Pieces Made With Care' }}
                         </h1>
-                        <p class="text-lg text-charcoal-500 mb-8 leading-relaxed max-w-xl">
+                    </x-reveal>
+                    <x-reveal type="fade-up" delay="240">
+                        <p class="text-lg text-slate-500 mb-8 leading-relaxed max-w-xl">
                             {{ $homeMeta['hero_subtitle'] ?? 'Cute amigurumi, keychains, coasters, scrunchies, wallets, headbands, cozy wearables, and custom gifts made with quality yarns.' }}
                         </p>
+                    </x-reveal>
+                    <x-reveal type="fade-up" delay="360">
                         <div class="flex flex-wrap gap-4">
-                            <a href="{{ route('products.index') }}" class="btn-accent text-base px-8 py-4">{{ $homeMeta['hero_cta'] ?? 'Shop Handmade' }}</a>
+                            <a href="{{ route('products.index') }}" class="btn-primary text-base px-8 py-4">{{ $homeMeta['hero_cta'] ?? 'Shop Handmade' }}</a>
                             <a href="{{ route('contact') }}" class="btn-outline">Request Custom Order</a>
                         </div>
                     </x-reveal>
                 </div>
                 <x-reveal type="fade-left" delay="200" class="hidden lg:block">
-                    <div class="relative">
-                        <div class="rounded-3xl overflow-hidden border border-oat-200 shadow-soft">
+                    <div class="relative" data-hero-parallax>
+                        <div
+                            class="rounded-3xl overflow-hidden border border-oat-200 shadow-soft"
+                            x-data="{ rx: 0, ry: 0 }"
+                            @mousemove="
+                                if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                                    const r = $el.getBoundingClientRect();
+                                    ry = (((($event.clientX - r.left) / r.width) - 0.5) * 6);
+                                    rx = -(((($event.clientY - r.top) / r.height) - 0.5) * 6);
+                                }
+                            "
+                            @mouseleave="rx = 0; ry = 0"
+                            :style="`transform: perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg); transform-style: preserve-3d;`"
+                            style="transition: transform 0.3s ease-out;"
+                        >
                             <img src="{{ config('media.hero') }}" alt="Colorful yarns and crochet hooks at {{ shop_name() }}" class="w-full h-[480px] object-cover" fetchpriority="high">
                         </div>
-                        <div class="absolute -top-4 right-6 bg-sage-600 text-white rounded-xl shadow-lg px-4 py-2 text-sm font-semibold">Custom Orders Welcome</div>
-                        <div class="absolute -bottom-6 left-6 bg-white rounded-2xl shadow-xl border border-oat-200 px-5 py-4 flex items-center gap-3">
+                        <div class="absolute -top-4 right-6 bg-sage-600 text-white rounded-xl shadow-lg px-4 py-2 text-sm font-semibold animate-float">Custom Orders Welcome</div>
+                        <div class="absolute -bottom-6 left-6 bg-white rounded-2xl shadow-xl border border-oat-200 px-5 py-4 flex items-center gap-3 animate-float animation-delay-300">
                             <span class="w-10 h-10 rounded-xl bg-terracotta-500 text-white flex items-center justify-center"><x-icon name="heart" class="w-5 h-5" /></span>
                             <div>
                                 <p class="font-bold text-charcoal-700 text-sm">100% Handmade</p>
-                                <p class="text-xs text-charcoal-500">Made with care in Karachi</p>
+                                <p class="text-xs text-slate-500">Made with care in Karachi</p>
                             </div>
                         </div>
                     </div>
@@ -53,18 +75,14 @@
                     ['icon' => 'chat', 'title' => 'Friendly Support', 'desc' => 'Order help anytime'],
                 ] as $i => $badge)
                     <x-reveal type="fade-up" :delay="$i * 80">
-                        <x-store-card class="text-center h-full flex flex-col items-center justify-center">
-                            <div class="w-12 h-12 mb-3 rounded-xl bg-oat-100 text-terracotta-500 flex items-center justify-center group-hover:scale-110 transition-all duration-300">
-                                <x-icon :name="$badge['icon']" class="w-6 h-6" />
-                            </div>
-                            <h3 class="font-semibold text-charcoal-700">{{ $badge['title'] }}</h3>
-                            <p class="text-sm text-charcoal-500 mt-1">{{ $badge['desc'] }}</p>
-                        </x-store-card>
+                        <x-icon-feature-card size="sm" :icon="$badge['icon']" :title="$badge['title']" :description="$badge['desc']" />
                     </x-reveal>
                 @endforeach
             </div>
         </div>
     </section>
+
+    <x-stitch-divider class="bg-white" />
 
     <section class="py-20 bg-oat-100/70 bg-mesh">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -80,14 +98,33 @@
                     ['step' => '03', 'icon' => 'truck', 'title' => 'Receive With Care', 'desc' => 'Your handmade order is packed neatly and delivered locally or nationwide.'],
                 ] as $i => $step)
                     <x-reveal type="fade-up" :delay="$i * 120">
-                        <x-store-card class="relative text-center h-full card-glow">
-                            <span class="absolute top-4 right-4 text-4xl font-black text-oat-200">{{ $step['step'] }}</span>
-                            <div class="icon-box mx-auto mb-5 bg-oat-100 text-terracotta-500">
-                                <x-icon :name="$step['icon']" class="w-7 h-7" />
-                            </div>
-                            <h3 class="text-xl font-bold text-charcoal-700 mb-2">{{ $step['title'] }}</h3>
-                            <p class="text-charcoal-500 text-sm leading-relaxed">{{ $step['desc'] }}</p>
-                        </x-store-card>
+                        <x-icon-feature-card :icon="$step['icon']" :title="$step['title']" :description="$step['desc']" :step="$step['step']" />
+                    </x-reveal>
+                @endforeach
+            </div>
+        </div>
+    </section>
+
+    <section class="section-dark py-20">
+        <div class="absolute inset-0 bg-mesh opacity-10 pointer-events-none animate-drift"></div>
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <x-reveal type="fade-up" class="text-center mb-14 max-w-2xl mx-auto">
+                <span class="inline-block px-4 py-1.5 rounded-full bg-white/10 text-gold-300 text-sm font-semibold mb-4 border border-white/10">Why Handmade</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Every Piece Made With Intention</h2>
+                <p class="text-oat-100/70 text-lg">No factory lines, no shortcuts — just careful stitching, quality yarn, and attention to the details that make a gift feel personal.</p>
+            </x-reveal>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                @foreach([
+                    ['count' => 500, 'suffix' => '+', 'label' => 'Happy Customers'],
+                    ['count' => 1000, 'suffix' => '+', 'label' => 'Pieces Handmade'],
+                    ['count' => 20, 'suffix' => '+', 'label' => 'Gift Styles'],
+                    ['count' => 100, 'suffix' => '%', 'label' => 'Handmade Care'],
+                ] as $i => $stat)
+                    <x-reveal type="scale" :delay="$i * 100">
+                        <div class="text-center p-6 rounded-2xl bg-white/5 border border-white/10">
+                            <div class="text-3xl md:text-4xl font-bold text-white" data-count="{{ $stat['count'] }}" data-count-suffix="{{ $stat['suffix'] }}">0</div>
+                            <div class="mt-2 text-oat-100/60 text-sm font-medium">{{ $stat['label'] }}</div>
+                        </div>
                     </x-reveal>
                 @endforeach
             </div>
@@ -122,6 +159,8 @@
     </section>
     @endif
 
+    <x-stitch-divider class="bg-white" />
+
     @if($featuredProducts->isNotEmpty())
     <section class="py-20 bg-gradient-to-b from-oat-100/70 to-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -152,27 +191,108 @@
                 <span class="section-badge">Testimonials</span>
                 <h2 class="section-title">Loved by Handmade Gift Shoppers</h2>
             </x-reveal>
-            <div class="store-grid-3">
-                @foreach([
-                    ['name' => 'Ayesha Noor', 'role' => 'Gift Customer', 'text' => 'The amigurumi was adorable and neatly finished. It felt personal, not mass-produced.', 'stars' => 5],
-                    ['name' => 'Maham Tariq', 'role' => 'Accessory Buyer', 'text' => 'Ordered scrunchies and a headband. Colors were beautiful and delivery was smooth.', 'stars' => 5],
-                    ['name' => 'Hina Ahmed', 'role' => 'Custom Order', 'text' => 'They helped me choose yarn colors for a custom gift and kept every detail exactly right.', 'stars' => 5],
-                ] as $i => $review)
-                    <x-reveal type="fade-up" :delay="$i * 100">
-                        <div class="h-full p-8 bg-oat-100/60 rounded-2xl border border-oat-200 card-hover relative">
-                            <div class="text-terracotta-400 mb-4 flex gap-0.5 justify-center">
-                                @for($s = 0; $s < $review['stars']; $s++)
-                                    <x-icon name="star" class="w-5 h-5" />
-                                @endfor
+            <div
+                x-data="{
+                    reviews: [
+                        { name: 'Ayesha Noor', role: 'Gift Customer', text: 'The amigurumi was adorable and neatly finished. It felt personal, not mass-produced.' },
+                        { name: 'Maham Tariq', role: 'Accessory Buyer', text: 'Ordered scrunchies and a headband. Colors were beautiful and delivery was smooth.' },
+                        { name: 'Hina Ahmed', role: 'Custom Order', text: 'They helped me choose yarn colors for a custom gift and kept every detail exactly right.' },
+                    ],
+                    active: 0,
+                    timer: null,
+                    start() {
+                        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { return; }
+                        this.timer = setInterval(() => { this.active = (this.active + 1) % this.reviews.length; }, 5000);
+                    },
+                    select(i) {
+                        this.active = i;
+                        clearInterval(this.timer);
+                        this.start();
+                    },
+                    prev() {
+                        this.select((this.active - 1 + this.reviews.length) % this.reviews.length);
+                    },
+                    next() {
+                        this.select((this.active + 1) % this.reviews.length);
+                    },
+                }"
+                x-init="start()"
+                class="max-w-2xl mx-auto relative"
+            >
+                <button
+                    type="button"
+                    @click="prev()"
+                    class="hidden md:flex absolute top-1/2 -translate-y-1/2 -left-16 w-11 h-11 rounded-full bg-white shadow-card hover:bg-oat-100 active:scale-95 items-center justify-center text-charcoal-600 transition-all"
+                    aria-label="Previous testimonial"
+                >
+                    <x-icon name="arrow-left" class="w-5 h-5" />
+                </button>
+                <button
+                    type="button"
+                    @click="next()"
+                    class="hidden md:flex absolute top-1/2 -translate-y-1/2 -right-16 w-11 h-11 rounded-full bg-white shadow-card hover:bg-oat-100 active:scale-95 items-center justify-center text-charcoal-600 transition-all"
+                    aria-label="Next testimonial"
+                >
+                    <x-icon name="arrow-right" class="w-5 h-5" />
+                </button>
+
+                <div class="relative min-h-[22rem] sm:min-h-[19rem]">
+                    <template x-for="(review, i) in reviews" :key="i">
+                        <div
+                            x-show="active === i"
+                            x-transition:enter="transition ease-out duration-500"
+                            x-transition:enter-start="opacity-0"
+                            x-transition:enter-end="opacity-100"
+                            x-transition:leave="transition ease-in duration-300"
+                            x-transition:leave-start="opacity-100"
+                            x-transition:leave-end="opacity-0"
+                            class="absolute inset-0 flex flex-col justify-center p-8 bg-oat-100/60 rounded-2xl border border-oat-200"
+                        >
+                            <div class="text-gold-500 mb-4 flex gap-0.5 justify-center">
+                                <x-icon name="star" class="w-5 h-5" />
+                                <x-icon name="star" class="w-5 h-5" />
+                                <x-icon name="star" class="w-5 h-5" />
+                                <x-icon name="star" class="w-5 h-5" />
+                                <x-icon name="star" class="w-5 h-5" />
                             </div>
-                            <p class="text-charcoal-500 leading-relaxed italic">"{{ $review['text'] }}"</p>
-                            <div class="mt-6 pt-6 border-t border-oat-200">
-                                <p class="font-semibold text-charcoal-700">{{ $review['name'] }}</p>
-                                <p class="text-sm text-sage-700">{{ $review['role'] }}</p>
+                            <p class="text-slate-500 leading-relaxed italic text-center" x-text="'&quot;' + review.text + '&quot;'"></p>
+                            <div class="mt-6 pt-6 border-t border-oat-200 text-center">
+                                <p class="font-semibold text-charcoal-700" x-text="review.name"></p>
+                                <p class="text-sm text-sage-700" x-text="review.role"></p>
                             </div>
                         </div>
-                    </x-reveal>
-                @endforeach
+                    </template>
+                </div>
+                <div class="flex items-center justify-center gap-4 mt-6 md:hidden">
+                    <button type="button" @click="prev()" class="w-11 h-11 shrink-0 rounded-full bg-white shadow-card hover:bg-oat-100 active:scale-95 flex items-center justify-center text-charcoal-600 transition-all" aria-label="Previous testimonial">
+                        <x-icon name="arrow-left" class="w-4 h-4" />
+                    </button>
+                    <div class="flex gap-2">
+                        <template x-for="(review, i) in reviews" :key="i">
+                            <button
+                                type="button"
+                                @click="select(i)"
+                                :class="active === i ? 'bg-terracotta-500 w-6' : 'bg-oat-300 w-2'"
+                                class="h-2 rounded-full transition-all duration-300"
+                                :aria-label="'Show testimonial ' + (i + 1)"
+                            ></button>
+                        </template>
+                    </div>
+                    <button type="button" @click="next()" class="w-11 h-11 shrink-0 rounded-full bg-white shadow-card hover:bg-oat-100 active:scale-95 flex items-center justify-center text-charcoal-600 transition-all" aria-label="Next testimonial">
+                        <x-icon name="arrow-right" class="w-4 h-4" />
+                    </button>
+                </div>
+                <div class="hidden md:flex justify-center gap-2 mt-6">
+                    <template x-for="(review, i) in reviews" :key="i">
+                        <button
+                            type="button"
+                            @click="select(i)"
+                            :class="active === i ? 'bg-terracotta-500 w-6' : 'bg-oat-300 w-2'"
+                            class="h-2 rounded-full transition-all duration-300"
+                            :aria-label="'Show testimonial ' + (i + 1)"
+                        ></button>
+                    </template>
+                </div>
             </div>
         </div>
     </section>
@@ -203,18 +323,15 @@
 
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <x-reveal type="scale">
-            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-oat-100 via-white to-sage-50 border border-oat-200 p-10 md:p-16 text-center">
-                <div class="relative z-10">
-                    <h2 class="text-3xl md:text-4xl font-bold mb-4 text-charcoal-700">Want Something Made Just for You?</h2>
-                    <p class="text-charcoal-500 mb-8 max-w-xl mx-auto text-lg">Share your colors, size, theme, or gift idea. We will help turn it into a handmade yarn piece.</p>
-                    <div class="flex flex-wrap justify-center gap-4">
-                        <a href="{{ route('contact') }}" class="btn-primary">Start Custom Order</a>
-                        <a href="tel:{{ preg_replace('/[^0-9+]/', '', shop_config('contact_phone')) }}" class="btn-outline inline-flex items-center gap-2">
-                            <x-icon name="phone" class="w-5 h-5" /> {{ shop_config('contact_phone') }}
-                        </a>
-                    </div>
-                </div>
-            </div>
+            <x-cta-banner
+                title="Want Something Made Just for You?"
+                description="Share your colors, size, theme, or gift idea. We will help turn it into a handmade yarn piece."
+                primary-label="Start Custom Order"
+                :primary-href="route('contact')"
+                :secondary-label="shop_config('contact_phone')"
+                :secondary-href="'tel:'.preg_replace('/[^0-9+]/', '', shop_config('contact_phone'))"
+                secondary-icon="phone"
+            />
         </x-reveal>
     </section>
 @endsection

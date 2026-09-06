@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductVariant;
+use App\Services\ProductVariantService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -11,6 +13,8 @@ class ProductSeeder extends Seeder
 {
     public function run(): void
     {
+        $variantService = app(ProductVariantService::class);
+
         $products = [
             ['Mini Bunny Amigurumi', 'Amigurumi', 1450, 1299, 18, true],
             ['Crochet Bear Plushie', 'Amigurumi', 1650, null, 14, true],
@@ -37,11 +41,13 @@ class ProductSeeder extends Seeder
                 continue;
             }
 
-            Product::create([
+            $sku = 'EKY-'.str_pad((string) ($index + 1), 4, '0', STR_PAD_LEFT);
+
+            $product = Product::create([
                 'category_id' => $category->id,
                 'name' => $name,
                 'slug' => Str::slug($name).'-'.($index + 1),
-                'sku' => 'EKY-'.str_pad((string) ($index + 1), 4, '0', STR_PAD_LEFT),
+                'sku' => $sku,
                 'description' => "{$name} handmade by ".shop_name().' with quality yarn, careful finishing, and gift-ready attention to detail.',
                 'price' => $price,
                 'sale_price' => $salePrice,
@@ -55,6 +61,30 @@ class ProductSeeder extends Seeder
                 'is_active' => true,
                 'is_featured' => $featured,
             ]);
+
+            $sizePrices = [
+                'S' => ['price' => max(50, $price - 150), 'sale' => $salePrice !== null ? max(40, $salePrice - 100) : null],
+                'M' => ['price' => $price, 'sale' => $salePrice],
+                'L' => ['price' => $price + 150, 'sale' => $salePrice !== null ? $salePrice + 100 : null],
+                'XL' => ['price' => $price + 300, 'sale' => $salePrice !== null ? $salePrice + 200 : null],
+            ];
+
+            $perSizeStock = max(1, intdiv($stock, 4));
+            $remainder = $stock - ($perSizeStock * 4);
+
+            $variants = [];
+            foreach (ProductVariant::SIZES as $i => $size) {
+                $variants[] = [
+                    'size' => $size,
+                    'price' => $sizePrices[$size]['price'],
+                    'sale_price' => $sizePrices[$size]['sale'],
+                    'stock_quantity' => $perSizeStock + ($i === 1 ? $remainder : 0),
+                    'sku' => "{$sku}-{$size}",
+                    'enabled' => true,
+                ];
+            }
+
+            $variantService->sync($product, $variants);
         }
     }
 }

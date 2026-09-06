@@ -31,9 +31,3 @@ export function initBackButtons() {
         });
     });
 }
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initBackButtons);
-} else {
-    initBackButtons();
-}

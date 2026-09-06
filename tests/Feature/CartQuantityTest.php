@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Category;
-use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -20,30 +18,35 @@ class CartQuantityTest extends TestCase
         Role::create(['name' => 'admin']);
     }
 
-    protected function makeProduct(int $stock): Product
+    protected function makeProduct(int $stock)
     {
-        $category = Category::create(['name' => 'Test', 'slug' => 'test', 'is_active' => true]);
-
-        return Product::create([
-            'category_id' => $category->id,
+        return $this->createTestProduct([
             'name' => 'Test Bulb',
-            'slug' => 'test-bulb',
-            'sku' => 'TST-001',
+            'slug' => 'test-bulb-'.uniqid(),
+            'sku' => 'TST-'.uniqid(),
             'price' => 100,
             'stock_quantity' => $stock,
-            'is_active' => true,
-        ]);
+        ], ['stock_quantity' => $stock]);
     }
 
     public function test_quantity_is_clamped_to_stock_with_notice(): void
     {
         $product = $this->makeProduct(3);
+        $variant = $this->defaultVariant($product);
 
-        $response = $this->post(route('cart.store'), ['product_id' => $product->id, 'quantity' => 5]);
+        $response = $this->post(route('cart.store'), [
+            'product_id' => $product->id,
+            'product_variant_id' => $variant->id,
+            'quantity' => 5,
+        ]);
 
         $response->assertRedirect();
         $response->assertSessionHas('info');
-        $this->assertDatabaseHas('cart_items', ['product_id' => $product->id, 'quantity' => 3]);
+        $this->assertDatabaseHas('cart_items', [
+            'product_id' => $product->id,
+            'product_variant_id' => $variant->id,
+            'quantity' => 3,
+        ]);
     }
 
     public function test_adding_same_product_twice_merges_into_one_row(): void
@@ -51,12 +54,25 @@ class CartQuantityTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole('customer');
         $product = $this->makeProduct(10);
+        $variant = $this->defaultVariant($product);
 
         $this->actingAs($user);
-        $this->post(route('cart.store'), ['product_id' => $product->id, 'quantity' => 2]);
-        $this->post(route('cart.store'), ['product_id' => $product->id, 'quantity' => 3]);
+        $this->post(route('cart.store'), [
+            'product_id' => $product->id,
+            'product_variant_id' => $variant->id,
+            'quantity' => 2,
+        ]);
+        $this->post(route('cart.store'), [
+            'product_id' => $product->id,
+            'product_variant_id' => $variant->id,
+            'quantity' => 3,
+        ]);
 
         $this->assertDatabaseCount('cart_items', 1);
-        $this->assertDatabaseHas('cart_items', ['product_id' => $product->id, 'quantity' => 5]);
+        $this->assertDatabaseHas('cart_items', [
+            'product_id' => $product->id,
+            'product_variant_id' => $variant->id,
+            'quantity' => 5,
+        ]);
     }
 }

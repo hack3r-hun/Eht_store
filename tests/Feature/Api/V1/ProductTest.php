@@ -25,7 +25,8 @@ class ProductTest extends ApiTestCase
 
         $response->assertOk()
             ->assertJsonPath('data.product.slug', 'cozy-shawl')
-            ->assertJsonPath('data.product.id', $product->id);
+            ->assertJsonPath('data.product.id', $product->id)
+            ->assertJsonStructure(['data' => ['product' => ['variants' => [['id', 'size', 'price', 'stock_quantity']]]]]);
     }
 
     public function test_product_show_returns_404_for_unknown_slug(): void

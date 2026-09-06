@@ -8,11 +8,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     require __DIR__.'/api/v1/cart.php';
     require __DIR__.'/api/v1/checkout.php';
 
-    Route::middleware(['auth:sanctum', 'verified.api'])->group(function () {
+    Route::middleware(['auth:sanctum', 'verified.api', 'throttle:api'])->group(function () {
         require __DIR__.'/api/v1/account.php';
     });
 
-    Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::middleware(['auth:sanctum', 'ability:admin', 'admin'])->prefix('admin')->name('admin.')->group(function () {
         require __DIR__.'/api/v1/admin.php';
     });
 });

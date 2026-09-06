@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Models\Category;
+use App\Models\Product;
 use App\Support\MediaUrl;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
@@ -14,7 +15,11 @@ class CategoryController extends Controller
 {
     public function index(): View
     {
-        $categories = Category::with('parent')->withCount('products')->orderBy('sort_order')->paginate(20);
+        $categories = Category::with('parent')
+            ->withCount('products')
+            ->withCount(['products as all_products_count' => fn ($query) => $query->withTrashed()])
+            ->orderBy('sort_order')
+            ->paginate(20);
 
         return view('admin.categories.index', compact('categories'));
     }
@@ -30,7 +35,7 @@ class CategoryController extends Controller
     {
         $data = $request->validated();
         $data['slug'] = $data['slug'] ?? $this->uniqueSlug($data['name']);
-        $data['is_active'] = $request->boolean('is_active', true);
+        $data['is_active'] = $request->boolean('is_active');
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('categories', 'public');
@@ -54,7 +59,7 @@ class CategoryController extends Controller
         $data = $request->validated();
         // Keep the existing slug when the field is left blank so category URLs stay stable.
         $data['slug'] = $data['slug'] ?? $category->slug;
-        $data['is_active'] = $request->boolean('is_active', true);
+        $data['is_active'] = $request->boolean('is_active');
 
         if ($request->hasFile('image')) {
             MediaUrl::deleteLocalFile($category->image);
@@ -69,8 +74,12 @@ class CategoryController extends Controller
 
     public function destroy(Category $category): RedirectResponse
     {
-        if ($category->products()->exists()) {
-            return back()->with('error', 'Cannot delete category with products.');
+        // Include soft-deleted products — MySQL cascadeOnDelete would hard-delete them.
+        if (Product::withTrashed()->where('category_id', $category->id)->exists()) {
+            return back()->with(
+                'error',
+                'Cannot delete this category while it still has products (including archived). Move or permanently remove them first.'
+            );
         }
 
         MediaUrl::deleteLocalFile($category->image);

@@ -10,7 +10,7 @@
             @forelse($addresses as $address)
                 <div class="bg-white rounded-2xl border border-slate-100 shadow-card p-6 card-hover flex justify-between">
                     <div>
-                        <p class="font-semibold">{{ $address->label }} @if($address->is_default)<span class="text-xs bg-brand-100 text-brand-700 px-2 py-0.5 rounded ml-2">Default</span>@endif</p>
+                        <p class="font-semibold">{{ $address->label }} @if($address->is_default)<span class="text-xs bg-sage-100 text-sage-700 px-2 py-0.5 rounded ml-2">Default</span>@endif</p>
                         <p class="text-sm text-slate-600 mt-1">{{ $address->full_name }} · {{ $address->phone }}</p>
                         <p class="text-sm text-slate-500">{{ $address->address_line }}, {{ $address->city }}</p>
                     </div>
@@ -37,7 +37,7 @@
                 <input type="text" name="city" placeholder="City" class="input-field" required>
                 <input type="text" name="postal_code" placeholder="Postal Code" class="input-field">
             </div>
-            <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="is_default" value="1" class="rounded text-brand-600"> Set as default</label>
+            <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="is_default" value="1" class="rounded text-sage-600"> Set as default</label>
             <button type="submit" class="btn-primary">Save Address</button>
         </form>
     </section>

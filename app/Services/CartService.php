@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\CartItem;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Support\CartIdentity;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Collection;
@@ -18,8 +19,9 @@ class CartService
             return collect();
         }
 
-        $query = CartItem::with('product.images')
-            ->whereHas('product', fn ($query) => $query->where('is_active', true));
+        $query = CartItem::with(['product.images', 'variant'])
+            ->whereHas('product', fn ($query) => $query->where('is_active', true))
+            ->whereHas('variant', fn ($query) => $query->where('is_active', true));
 
         if ($identity->userId) {
             $query->where('user_id', $identity->userId);
@@ -32,7 +34,23 @@ class CartService
 
     public function count(): int
     {
-        return $this->items()->sum('quantity');
+        $identity = CartIdentity::resolve();
+
+        if ($identity->isGuest() && ! $identity->hasGuestToken()) {
+            return 0;
+        }
+
+        $query = CartItem::query()
+            ->whereHas('product', fn ($query) => $query->where('is_active', true))
+            ->whereHas('variant', fn ($query) => $query->where('is_active', true));
+
+        if ($identity->userId) {
+            $query->where('user_id', $identity->userId);
+        } else {
+            $query->where('session_id', $identity->guestToken);
+        }
+
+        return (int) $query->sum('quantity');
     }
 
     public function subtotal(): float
@@ -55,33 +73,51 @@ class CartService
     /**
      * @return array{clamped: bool, guest_cart_token: ?string}
      */
-    public function add(Product $product, int $quantity = 1): array
+    public function add(Product $product, ProductVariant $variant, int $quantity = 1): array
     {
-        if ($quantity < 1 || $product->stock_quantity < 1) {
+        if ($variant->product_id !== $product->id) {
+            abort(422, 'Selected size does not belong to this product.');
+        }
+
+        if ($quantity < 1 || ! $variant->is_active || $variant->stock_quantity < 1) {
             return ['clamped' => false, 'guest_cart_token' => $this->guestCartToken()];
         }
 
         $identity = CartIdentity::resolve(createIfMissing: true);
 
         $attributes = $identity->userId
-            ? ['user_id' => $identity->userId, 'product_id' => $product->id]
-            : ['session_id' => $identity->guestToken, 'product_id' => $product->id];
+            ? [
+                'user_id' => $identity->userId,
+                'product_id' => $product->id,
+                'product_variant_id' => $variant->id,
+            ]
+            : [
+                'session_id' => $identity->guestToken,
+                'product_id' => $product->id,
+                'product_variant_id' => $variant->id,
+            ];
 
         $cartItem = CartItem::firstOrNew($attributes);
         $requestedTotal = ($cartItem->exists ? $cartItem->quantity : 0) + $quantity;
-        $clamped = $requestedTotal > $product->stock_quantity;
-        $cartItem->quantity = min($requestedTotal, $product->stock_quantity);
+        $clamped = $requestedTotal > $variant->stock_quantity;
+        $cartItem->quantity = min($requestedTotal, $variant->stock_quantity);
 
         try {
             $cartItem->save();
         } catch (UniqueConstraintViolationException) {
-            $existing = CartItem::where($attributes)->first();
+            $existing = CartItem::where('product_variant_id', $variant->id)
+                ->when(
+                    $identity->userId,
+                    fn ($q) => $q->where('user_id', $identity->userId),
+                    fn ($q) => $q->where('session_id', $identity->guestToken)
+                )
+                ->first();
 
             if ($existing) {
                 $requestedTotal = $existing->quantity + $quantity;
-                $clamped = $requestedTotal > $product->stock_quantity;
+                $clamped = $requestedTotal > $variant->stock_quantity;
                 $existing->update([
-                    'quantity' => min($requestedTotal, $product->stock_quantity),
+                    'quantity' => min($requestedTotal, $variant->stock_quantity),
                 ]);
             }
         }
@@ -98,23 +134,26 @@ class CartService
     public function update(CartItem $cartItem, int $quantity): array
     {
         $this->authorizeItem($cartItem);
+        $cartItem->loadMissing(['product', 'variant']);
 
-        if (! $cartItem->product || ! $cartItem->product->is_active) {
+        if (! $cartItem->product || ! $cartItem->product->is_active || ! $cartItem->variant || ! $cartItem->variant->is_active) {
             $cartItem->delete();
 
             return ['removed' => true, 'clamped' => false];
         }
 
-        if ($quantity < 1) {
+        $stock = $cartItem->variant->stock_quantity;
+
+        if ($quantity < 1 || $stock < 1) {
             $cartItem->delete();
 
             return ['removed' => true, 'clamped' => false];
         }
 
-        $clamped = $quantity > $cartItem->product->stock_quantity;
+        $clamped = $quantity > $stock;
 
         $cartItem->update([
-            'quantity' => min($quantity, $cartItem->product->stock_quantity),
+            'quantity' => min($quantity, $stock),
         ]);
 
         return ['removed' => false, 'clamped' => $clamped];
@@ -152,31 +191,27 @@ class CartService
         }
 
         CartItem::where('session_id', $sessionId)->each(function (CartItem $guestItem) use ($userId) {
+            $guestItem->loadMissing(['product', 'variant']);
+
+            if (! $guestItem->product || ! $guestItem->product->is_active || ! $guestItem->variant || ! $guestItem->variant->is_active) {
+                $guestItem->delete();
+
+                return;
+            }
+
             $existing = CartItem::where('user_id', $userId)
-                ->where('product_id', $guestItem->product_id)
+                ->where('product_variant_id', $guestItem->product_variant_id)
                 ->first();
 
             if ($existing) {
-                if (! $guestItem->product || ! $guestItem->product->is_active) {
-                    $guestItem->delete();
-
-                    return;
-                }
-
                 $existing->update([
                     'quantity' => min(
                         $existing->quantity + $guestItem->quantity,
-                        $guestItem->product->stock_quantity
+                        $guestItem->variant->stock_quantity
                     ),
                 ]);
                 $guestItem->delete();
             } else {
-                if (! $guestItem->product || ! $guestItem->product->is_active) {
-                    $guestItem->delete();
-
-                    return;
-                }
-
                 $guestItem->update([
                     'user_id' => $userId,
                     'session_id' => null,

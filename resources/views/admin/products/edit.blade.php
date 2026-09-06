@@ -3,5 +3,5 @@
 @section('page-title', 'Edit Product')
 
 @section('content')
-    @include('admin.products.form', ['product' => $product])
+    @include('admin.products.form')
 @endsection

@@ -29,15 +29,15 @@
                             <tr class="group">
                                 <td>
                                     <div class="flex items-center gap-3">
-                                        <span class="w-9 h-9 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                        <span class="w-9 h-9 rounded-lg bg-sage-50 text-sage-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                                             <x-icon name="folder" class="w-5 h-5" />
                                         </span>
-                                        <span class="font-semibold text-slate-900 group-hover:text-brand-700 transition-colors">{{ $category->name }}</span>
+                                        <span class="font-semibold text-slate-900 group-hover:text-sage-700 transition-colors">{{ $category->name }}</span>
                                     </div>
                                 </td>
                                 <td class="text-slate-500">{{ $category->parent?->name ?? '—' }}</td>
                                 <td>
-                                    <span class="admin-badge bg-brand-50 text-brand-700">{{ $category->products_count }} items</span>
+                                    <span class="admin-badge bg-sage-50 text-sage-700">{{ $category->products_count }} items</span>
                                 </td>
                                 <td>
                                     <span class="admin-badge {{ $category->is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
@@ -47,12 +47,16 @@
                                 <td class="text-right">
                                     <div class="flex items-center justify-end gap-3">
                                     <a href="{{ route('admin.categories.edit', $category) }}" class="admin-action-link">Edit →</a>
-                                    <x-confirm-delete
-                                        :action="route('admin.categories.destroy', $category)"
-                                        title="Delete this category?"
-                                        :item="$category->name"
-                                        message="It will be permanently deleted along with its associations. This action cannot be undone."
-                                    />
+                                    @if(($category->all_products_count ?? $category->products_count) > 0)
+                                        <span class="text-xs text-slate-400" title="Move or archive products first">Has products</span>
+                                    @else
+                                        <x-confirm-delete
+                                            :action="route('admin.categories.destroy', $category)"
+                                            title="Delete this category?"
+                                            :item="$category->name"
+                                            message="This empty category will be permanently deleted. This action cannot be undone."
+                                        />
+                                    @endif
                                     </div>
                                 </td>
                             </tr>

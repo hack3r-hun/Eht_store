@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Category;
-use App\Models\Product;
 use App\Models\User;
 use App\Services\CartService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -26,19 +24,17 @@ class CheckoutTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole('customer');
 
-        $category = Category::create(['name' => 'Test', 'slug' => 'test', 'is_active' => true]);
-        $product = Product::create([
-            'category_id' => $category->id,
+        $product = $this->createTestProduct([
             'name' => 'Wire',
             'slug' => 'wire',
             'sku' => 'W-001',
             'price' => 500,
             'stock_quantity' => 20,
-            'is_active' => true,
         ]);
+        $variant = $this->defaultVariant($product);
 
         $this->actingAs($user);
-        app(CartService::class)->add($product, 1);
+        app(CartService::class)->add($product, $variant, 1);
 
         $response = $this->post(route('checkout.store'), [
             'full_name' => 'Test User',
@@ -50,6 +46,12 @@ class CheckoutTest extends TestCase
 
         $response->assertRedirect();
         $this->assertDatabaseHas('orders', ['user_id' => $user->id]);
+        $this->assertDatabaseHas('order_items', [
+            'product_id' => $product->id,
+            'size' => 'M',
+            'product_variant_id' => $variant->id,
+        ]);
+        $this->assertEquals(19, $variant->fresh()->stock_quantity);
         $this->assertEquals(19, $product->fresh()->stock_quantity);
     }
 
@@ -58,19 +60,17 @@ class CheckoutTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole('customer');
 
-        $category = Category::create(['name' => 'Test', 'slug' => 'test', 'is_active' => true]);
-        $product = Product::create([
-            'category_id' => $category->id,
+        $product = $this->createTestProduct([
             'name' => 'Hidden Wire',
             'slug' => 'hidden-wire',
             'sku' => 'H-001',
             'price' => 500,
             'stock_quantity' => 20,
-            'is_active' => true,
         ]);
+        $variant = $this->defaultVariant($product);
 
         $this->actingAs($user);
-        app(CartService::class)->add($product, 1);
+        app(CartService::class)->add($product, $variant, 1);
         $product->update(['is_active' => false]);
 
         $response = $this->from(route('checkout.index'))->post(route('checkout.store'), [
@@ -83,6 +83,7 @@ class CheckoutTest extends TestCase
 
         $response->assertRedirect(route('checkout.index'));
         $this->assertDatabaseMissing('orders', ['user_id' => $user->id]);
+        $this->assertEquals(20, $variant->fresh()->stock_quantity);
         $this->assertEquals(20, $product->fresh()->stock_quantity);
     }
 }

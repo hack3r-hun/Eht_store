@@ -4,15 +4,17 @@
 @section('meta_description', 'Learn about '.shop_name().' - handcrafted crochet, knitted gifts, and cozy yarn creations made in Karachi.')
 
 @section('content')
-    <section class="relative overflow-hidden bg-gradient-to-br from-oat-100 via-white to-sage-50 py-20 md:py-28 border-b border-oat-200">
-        <div class="absolute inset-x-0 bottom-0 h-20 bg-mesh opacity-50 pointer-events-none"></div>
+    <section class="hero-section py-16 md:py-20">
+        <div class="absolute inset-x-0 bottom-0 h-20 bg-mesh opacity-50 pointer-events-none animate-drift"></div>
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <x-reveal type="fade-up">
-                <span class="section-badge">About {{ shop_name() }}</span>
-                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-charcoal-700">
+                <span class="hero-eyebrow">About {{ shop_name() }}</span>
+                <h1 class="hero-title mx-auto">
                     {{ $page->meta['hero_title'] ?? 'Handmade Yarn Creations With Personality' }}
                 </h1>
-                <p class="text-lg md:text-xl text-charcoal-500 max-w-3xl mx-auto leading-relaxed">
+            </x-reveal>
+            <x-reveal type="fade-up" delay="150">
+                <p class="text-lg md:text-xl text-slate-500 max-w-3xl mx-auto leading-relaxed">
                     {{ $page->meta['hero_subtitle'] ?? 'Crochet, knit, accessories, cozy wearables, and custom gifts made with care in Karachi.' }}
                 </p>
             </x-reveal>
@@ -65,7 +67,7 @@
                     <x-reveal type="scale" :delay="$i * 100">
                         <div class="text-center p-8 bg-white rounded-2xl border border-oat-200 shadow-card card-glow card-hover">
                             <div class="text-4xl md:text-5xl font-bold text-gradient" data-count="{{ $stat['count'] }}" data-count-suffix="{{ $stat['suffix'] }}">0</div>
-                            <div class="mt-2 text-charcoal-500 font-medium">{{ $stat['label'] }}</div>
+                            <div class="mt-2 text-slate-500 font-medium">{{ $stat['label'] }}</div>
                         </div>
                     </x-reveal>
                 @endforeach
@@ -86,16 +88,23 @@
                     ['icon' => 'shield', 'title' => 'Our Values', 'desc' => 'Quality yarns, honest communication, neat finishing, and respect for every customer idea.'],
                 ] as $i => $item)
                     <x-reveal type="fade-up" :delay="$i * 120">
-                        <div class="group h-full p-8 rounded-3xl border border-slate-100 bg-white shadow-card card-glow card-hover text-center">
-                            <div class="icon-box mx-auto mb-5 bg-oat-100 text-terracotta-500">
-                                <x-icon :name="$item['icon']" class="w-7 h-7" />
-                            </div>
-                            <h3 class="text-xl font-bold text-charcoal-700 mb-3 group-hover:text-sage-700 transition-colors">{{ $item['title'] }}</h3>
-                            <p class="text-charcoal-500 leading-relaxed">{{ $item['desc'] }}</p>
-                        </div>
+                        <x-icon-feature-card :icon="$item['icon']" :title="$item['title']" :description="$item['desc']" />
                     </x-reveal>
                 @endforeach
             </div>
+        </div>
+    </section>
+
+    <section class="section-dark py-20">
+        <div class="absolute inset-0 bg-mesh opacity-10 pointer-events-none animate-drift"></div>
+        <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <x-reveal type="fade-up">
+                <x-icon name="sparkles" class="w-10 h-10 mx-auto mb-6 text-gold-300" />
+                <p class="text-2xl md:text-3xl font-semibold leading-snug text-white">
+                    &quot;Every stitch is a small decision — the yarn, the color, the finish. That care is what turns a handmade piece into something someone will actually keep.&quot;
+                </p>
+                <p class="mt-6 text-oat-100/70 font-medium">— The {{ shop_name() }} Studio</p>
+            </x-reveal>
         </div>
     </section>
 
@@ -117,12 +126,12 @@
                 ] as $i => $feature)
                     <x-reveal type="fade-up" :delay="($i % 3) * 100">
                         <div class="group flex gap-4 p-6 bg-white rounded-2xl border border-slate-100 shadow-card card-hover">
-                            <div class="shrink-0 w-12 h-12 rounded-xl bg-oat-100 text-terracotta-500 flex items-center justify-center group-hover:bg-sage-600 group-hover:text-white group-hover:scale-110 transition-all duration-300">
+                            <div class="shrink-0 w-12 h-12 rounded-xl bg-terracotta-50 text-terracotta-500 flex items-center justify-center group-hover:bg-sage-600 group-hover:text-white group-hover:scale-110 transition-all duration-300">
                                 <x-icon :name="$feature['icon']" class="w-6 h-6" />
                             </div>
                             <div>
                                 <h3 class="font-semibold text-charcoal-700 group-hover:text-sage-700 transition-colors">{{ $feature['title'] }}</h3>
-                                <p class="text-sm text-charcoal-500 mt-1 leading-relaxed">{{ $feature['desc'] }}</p>
+                                <p class="text-sm text-slate-500 mt-1 leading-relaxed">{{ $feature['desc'] }}</p>
                             </div>
                         </div>
                     </x-reveal>
@@ -134,16 +143,14 @@
     <section class="py-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <x-reveal type="scale">
-                <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-oat-100 via-white to-sage-50 border border-oat-200 p-12 md:p-16 text-center">
-                    <div class="relative z-10">
-                        <h2 class="text-3xl md:text-4xl font-bold mb-4 text-charcoal-700">Ready to Find Your Next Handmade Piece?</h2>
-                        <p class="text-charcoal-500 mb-8 max-w-xl mx-auto text-lg">Browse ready-made products or contact us for a custom crochet or knit gift.</p>
-                        <div class="flex flex-wrap justify-center gap-4">
-                            <a href="{{ route('products.index') }}" class="btn-primary">Browse Products</a>
-                            <a href="{{ route('contact') }}" class="btn-outline">Start Custom Order</a>
-                        </div>
-                    </div>
-                </div>
+                <x-cta-banner
+                    title="Ready to Find Your Next Handmade Piece?"
+                    description="Browse ready-made products or contact us for a custom crochet or knit gift."
+                    primary-label="Browse Products"
+                    :primary-href="route('products.index')"
+                    secondary-label="Start Custom Order"
+                    :secondary-href="route('contact')"
+                />
             </x-reveal>
         </div>
     </section>

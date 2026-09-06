@@ -9,7 +9,8 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Product;
-use Illuminate\Support\Facades\Auth;
+use App\Models\ProductVariant;
+use App\Support\CartIdentity;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -52,14 +53,19 @@ class CheckoutService
                 throw new \RuntimeException("{$productName} is no longer available.");
             }
 
-            if ($item->quantity > $item->product->stock_quantity) {
-                throw new \RuntimeException("Not enough stock for {$item->product->name}.");
+            if (! $item->variant || ! $item->variant->is_active) {
+                throw new \RuntimeException("{$item->product->name} size is no longer available.");
+            }
+
+            if ($item->quantity > $item->variant->stock_quantity) {
+                throw new \RuntimeException("Not enough stock for {$item->product->name} ({$item->variant->size}).");
             }
         }
 
         $totals = $this->calculateTotals($data['city'] ?? null);
+        $userId = CartIdentity::resolve()->userId;
 
-        return DB::transaction(function () use ($data, $paymentMethod, $items, $totals) {
+        return DB::transaction(function () use ($data, $paymentMethod, $items, $totals, $userId) {
             $shippingAddress = [
                 'full_name' => $data['full_name'],
                 'phone' => $data['phone'],
@@ -74,7 +80,7 @@ class CheckoutService
             }
 
             $order = Order::create([
-                'user_id' => Auth::id(),
+                'user_id' => $userId,
                 'order_number' => $this->generateOrderNumber(),
                 'status' => $paymentMethod === PaymentMethod::Cod
                     ? OrderStatus::AwaitingCod
@@ -89,7 +95,7 @@ class CheckoutService
                 'notes' => $data['notes'] ?? null,
             ]);
 
-            if (! Auth::id()) {
+            if (! $userId) {
                 $guestToken = Str::random(40);
                 $order->update(['guest_access_token' => hash('sha256', $guestToken)]);
                 $order->plain_guest_access_token_for_api = $guestToken;
@@ -100,26 +106,36 @@ class CheckoutService
             }
 
             foreach ($items as $item) {
-                // Atomic guarded decrement: fails (0 rows) if concurrent checkouts
-                // already consumed the stock, rolling back the whole order.
-                $affected = Product::whereKey($item->product_id)
+                $variant = $item->variant;
+
+                $affected = ProductVariant::whereKey($variant->id)
                     ->where('is_active', true)
                     ->where('stock_quantity', '>=', $item->quantity)
                     ->decrement('stock_quantity', $item->quantity);
 
                 if ($affected === 0) {
-                    throw new \RuntimeException("Not enough stock for {$item->product->name}.");
+                    throw new \RuntimeException("Not enough stock for {$item->product->name} ({$variant->size}).");
                 }
 
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item->product_id,
+                    'product_variant_id' => $variant->id,
                     'product_name' => $item->product->name,
-                    'product_sku' => $item->product->sku,
+                    'product_sku' => $variant->sku ?: $item->product->sku,
+                    'size' => $variant->size,
                     'quantity' => $item->quantity,
-                    'unit_price' => $item->product->effective_price,
+                    'unit_price' => $variant->effective_price,
                     'line_total' => $item->line_total,
                 ]);
+            }
+
+            $productIds = $items->pluck('product_id')->unique();
+            foreach ($productIds as $productId) {
+                $product = Product::with('variants')->find($productId);
+                if ($product) {
+                    app(ProductVariantService::class)->refreshProductAggregates($product);
+                }
             }
 
             Payment::create([

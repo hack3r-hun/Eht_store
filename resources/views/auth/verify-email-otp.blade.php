@@ -1,6 +1,6 @@
 <x-guest-layout>
     <div class="text-center mb-6">
-        <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-brand-100 text-brand-600 flex items-center justify-center">
+        <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-sage-100 text-sage-600 flex items-center justify-center">
             <x-icon name="check-circle" class="w-7 h-7" />
         </div>
         <h2 class="text-2xl font-bold text-slate-900">Enter verification code</h2>
@@ -8,10 +8,10 @@
     </div>
 
     @if(session('dev_otp'))
-        <div class="mb-6 p-4 rounded-xl bg-brand-50 border border-brand-200 text-center">
-            <p class="text-xs font-semibold text-brand-800 uppercase tracking-wide mb-1">Development — your OTP code</p>
-            <p class="text-3xl font-bold text-brand-900 tracking-[0.3em]">{{ session('dev_otp') }}</p>
-            <p class="text-xs text-brand-700 mt-2">Copy this code below. In production it will only be sent by email.</p>
+        <div class="mb-6 p-4 rounded-xl bg-sage-50 border border-sage-200 text-center">
+            <p class="text-xs font-semibold text-sage-800 uppercase tracking-wide mb-1">Development — your OTP code</p>
+            <p class="text-3xl font-bold text-sage-900 tracking-[0.3em]">{{ session('dev_otp') }}</p>
+            <p class="text-xs text-sage-700 mt-2">Copy this code below. In production it will only be sent by email.</p>
         </div>
     @endif
 
@@ -30,7 +30,7 @@
     <div class="mt-6 space-y-3">
         <form method="POST" action="{{ route('verification.otp.resend') }}">
             @csrf
-            <button type="submit" class="w-full text-sm font-semibold text-brand-700 hover:text-brand-800">Resend Code</button>
+            <button type="submit" class="w-full text-sm font-semibold text-sage-700 hover:text-sage-800">Resend Code</button>
         </form>
 
         <a href="{{ route('verification.notice') }}" class="btn-outline w-full text-center block text-sm">

@@ -9,7 +9,7 @@ Thank you for your order **{{ $order->order_number }}**.
 
 ## Items
 @foreach($order->items as $item)
-- {{ $item->product_name }} × {{ $item->quantity }} — {{ shop_money($item->line_total) }}
+- {{ $item->product_name }}@if($item->size) ({{ $item->size }})@endif × {{ $item->quantity }} — {{ shop_money($item->line_total) }}
 @endforeach
 
 Thanks,<br>

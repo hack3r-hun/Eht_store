@@ -59,6 +59,48 @@ class Product extends Model
         return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
 
+    public function variants(): HasMany
+    {
+        return $this->hasMany(ProductVariant::class)->orderBy('sort_order');
+    }
+
+    public function activeVariants(): HasMany
+    {
+        return $this->hasMany(ProductVariant::class)
+            ->where('is_active', true)
+            ->orderBy('sort_order');
+    }
+
+    public function getFromPriceAttribute(): float
+    {
+        if ($this->relationLoaded('activeVariants') || $this->relationLoaded('variants')) {
+            $variants = $this->relationLoaded('activeVariants')
+                ? $this->activeVariants
+                : $this->variants->where('is_active', true);
+
+            if ($variants->isNotEmpty()) {
+                return (float) $variants->min(fn (ProductVariant $variant) => $variant->effective_price);
+            }
+        }
+
+        $min = $this->activeVariants()->get()->min(fn (ProductVariant $variant) => $variant->effective_price);
+
+        return $min !== null ? (float) $min : $this->effective_price;
+    }
+
+    public function getActiveSizeCountAttribute(): int
+    {
+        if ($this->relationLoaded('activeVariants')) {
+            return $this->activeVariants->count();
+        }
+
+        if ($this->relationLoaded('variants')) {
+            return $this->variants->where('is_active', true)->count();
+        }
+
+        return $this->activeVariants()->count();
+    }
+
     public function primaryImage(): ?ProductImage
     {
         $images = $this->relationLoaded('images')
@@ -103,6 +145,17 @@ class Product extends Model
 
         if ($image) {
             return MediaUrl::resolve($image->path, MediaUrl::productFallback($this->name));
+        }
+
+        return MediaUrl::productFallback($this->name);
+    }
+
+    public function getThumbUrlAttribute(): string
+    {
+        $image = $this->primaryImage();
+
+        if ($image) {
+            return MediaUrl::resolveThumb($image->path, MediaUrl::productFallback($this->name));
         }
 
         return MediaUrl::productFallback($this->name);

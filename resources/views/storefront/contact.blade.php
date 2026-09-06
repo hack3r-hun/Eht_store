@@ -3,12 +3,14 @@
 @section('title', 'Contact Us')
 
 @section('content')
-    <section class="relative overflow-hidden bg-gradient-to-br from-oat-100 via-white to-sage-50 py-20 border-b border-oat-200">
+    <section class="hero-section py-16 md:py-20">
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <x-reveal type="fade-up">
-                <span class="section-badge">Get In Touch</span>
-                <h1 class="text-4xl md:text-5xl font-bold mb-4 text-charcoal-700">Contact Us</h1>
-                <p class="text-lg text-charcoal-500 max-w-2xl mx-auto">Have a question about a product, gift idea, custom color, or delivery? We're here to help.</p>
+                <span class="hero-eyebrow">Get In Touch</span>
+                <h1 class="hero-title mx-auto">Contact Us</h1>
+            </x-reveal>
+            <x-reveal type="fade-up" delay="150">
+                <p class="text-lg text-slate-500 max-w-2xl mx-auto">Have a question about a product, gift idea, custom color, or delivery? We're here to help.</p>
             </x-reveal>
         </div>
     </section>
@@ -23,12 +25,12 @@
                 ] as $i => $info)
                     <x-reveal type="fade-right" :delay="$i * 100">
                         <x-store-card class="h-full card-glow group">
-                            <div class="icon-box bg-oat-100 text-terracotta-500 mb-4">
+                            <div class="icon-box bg-terracotta-50 text-terracotta-500 mb-4">
                                 <x-icon :name="$info['icon']" class="w-7 h-7" />
                             </div>
                             <h3 class="font-bold text-charcoal-700">{{ $info['title'] }}</h3>
                             <p class="mt-1 text-sage-700 font-medium">{{ $info['value'] }}</p>
-                            <p class="mt-1 text-sm text-charcoal-500">{{ $info['desc'] }}</p>
+                            <p class="mt-1 text-sm text-slate-500">{{ $info['desc'] }}</p>
                         </x-store-card>
                     </x-reveal>
                 @endforeach
