@@ -1,6 +1,8 @@
 # EK Yarn Co. Storefront
 
-A Laravel e-commerce application for handcrafted crochet and knitted products, including amigurumi, keychains, coasters, scrunchies, wallets, headbands, sweaters, shawls, and custom gifts.
+A Laravel e-commerce application for handcrafted crochet and knitted products — amigurumi, keychains, coasters,
+scrunchies, wallets, headbands, sweaters, shawls and custom gifts. The shop owner runs almost everything from the
+admin dashboard: products, orders, page content, menus, invoices and shop features.
 
 ## Tech Stack
 
@@ -12,34 +14,72 @@ A Laravel e-commerce application for handcrafted crochet and knitted products, i
 | Auth | Laravel Breeze + Spatie Permission + Sanctum (API) |
 | Payments | Stripe (PaymentIntents) + Cash on Delivery |
 | PDF | DomPDF (invoices) |
+| API docs | Scribe |
 
 ## Features
 
-### Customer Storefront
-- Home, About Us, Contact Us
-- Product catalog with search, filters, sorting, pagination
-- Product detail with specs and related items
-- Shopping cart with guest and logged-in support
-- Checkout with COD and Stripe card payment
-- User registration, login, profile, addresses, order history
-- Invoice PDF download
+### Customer storefront
+- Home, About, Contact and CMS-built pages (including shipping / returns / care policies)
+- Product catalog with search, filters, sorting and pagination; product detail with variants, specs and related items
+- Shopping cart (guest and logged-in) with AJAX quantity updates and a free-shipping progress bar
+- Checkout with Cash on Delivery and Stripe card payment, optional gift wrap / gift message / hidden prices
+- Accounts: registration, login, profile, addresses, order history, invoice PDF download
+- Product reviews and ratings, wishlist (merged on login), recently viewed, low-stock badges, back-in-stock email alerts
+- Custom order requests with reference photo, order tracking at `/track-order`, WhatsApp chat button
+- Newsletter pop-up and an optional **promo pop-up** (sales, seasons, announcements)
+- Mobile-first design with a bottom tab bar on phones
 
-### Admin Panel (`/admin`)
-- Dashboard with revenue, orders, low-stock alerts
-- Product CRUD with image upload
-- Category CRUD with nested collections
-- Order management with status updates and invoices
-- Customer list
-- Contact message inbox and replies
-- CMS page editor for Home/About content
-- Shop settings for name, tax, shipping, and contact info
+### Admin panel (`/admin`)
+- **Dashboard** for today: sales and orders, a "needs your attention" list, recent orders, low stock, auto-refresh
+- **Statistics** for analysis: period picker with comparison to the previous period, charts, CSV export
+- Products (with images and variants), categories, orders with status updates and invoices
+- Customers, including guest buyers, with a CSV export for people who opted in to offers
+- Messages inbox, reviews moderation, custom orders, coupons, newsletter subscribers
+- **CMS Pages**, **Navigation & Footer**, **Invoice** designer, **Modules**, **Settings**
+- Sticky sidebar that stays in view while scrolling
+
+## Dashboard → Modules
+
+`Admin → Modules` switches shop features on or off. Each module with options has an **Edit** button that opens its own
+screen for text, pictures and settings; modules with nothing to tune show only the switch. Settings can be prepared while a
+module is off. The **Save switches** button is at the top right and stays visible while scrolling.
+
+Available modules include: accepting orders (with a closed message), guest checkout, payment methods (names and
+descriptions are editable), gift options, coupons, low-stock badges (limit is editable), reviews, wishlist, newsletter
+pop-up, **promo pop-up**, back-in-stock alerts, recently viewed, custom orders, order tracking, WhatsApp and customer invoices.
+
+### Promo pop-up
+Shown to visitors when a page loads. Configure it entirely from `Admin → Modules → Promo pop-up`:
+title, small label, message, picture, button text and link, delay, how often a visitor sees it (every load, once per
+visit, once a day, or once until the message changes), where it appears (home only or every page) and optional start / end dates.
+It never stacks on top of the newsletter pop-up.
+
+### Adding a module or a setting
+Describe it in `app/Support/Modules/ModuleRegistry.php` (field kinds: `toggle`, `number`, `text`, `textarea`, `select`,
+`date`, `image`), then read it with `module_enabled('key')` and `module_value('key', 'field')`. Protect routes with
+`->middleware('module:key')`. The edit screen and validation follow the registry automatically.
+
+## CMS / Page Builder
+
+`Admin → CMS Pages` edits every storefront page and creates new pages served at `/p/{slug}`.
+
+- Pages are an ordered list of sections (hero, icon cards, stats, text, image + text, product grid, collections,
+  testimonials, FAQ, gallery, call-to-action, divider, info card, quote). Reorder, hide, duplicate, delete, restyle and
+  upload images from the editor.
+- Until a layout is saved, a page shows its built-in design (`app/Support/Cms/PageDefaults.php`); **Reset to original** returns to it.
+- New block type: describe it in `app/Support/Cms/SectionSchema.php` and add `resources/views/components/cms/{type}.blade.php`.
+- `Admin → Navigation & Footer` controls the header menu, footer links and text, the top-bar message and social links.
+- Uploaded images need the storage link: `php artisan storage:link`.
+
+## Invoices
+
+`Admin → Invoice` controls the PDF invoice: company details, tax number, logo, accent colour, paper size, number prefix,
+show/hide switches, wording, bank details, terms and the copyright line. Preview with a sample or the latest order.
+Rendering lives in `app/Services/InvoiceBuilder.php` and `resources/views/invoices/order.blade.php`.
 
 ## Brand Theme
 
-- Warm Oat: `#F5F5DC`
-- Sage Green: `#8A9A5B`
-- Terracotta: `#E2725B`
-- Charcoal: `#36454F`
+- Warm Oat `#F5F5DC` · Sage Green `#8A9A5B` · Terracotta `#E2725B` · Charcoal `#36454F`
 
 ## Quick Start
 
@@ -47,38 +87,43 @@ A Laravel e-commerce application for handcrafted crochet and knitted products, i
 composer install
 cp .env.example .env
 php artisan key:generate
+# Set SEED_ADMIN_PASSWORD and SEED_CUSTOMER_PASSWORD in .env to strong values of your own BEFORE seeding
 php artisan migrate:fresh --seed
 php artisan storage:link
 npm install
-npm run build
+npm run dev        # or: npm run build
 php artisan serve
 ```
 
-Visit: http://127.0.0.1:8000
+Open http://127.0.0.1:8000. The admin panel is at `/admin` (sign in at `/login` with the admin account created by the seeder).
 
-### Admin dashboard
-
-| Item | Value |
-|------|--------|
-| Login | http://127.0.0.1:8000/login |
-| Dashboard | http://127.0.0.1:8000/admin |
-| Email | `admin@ekyarnco.local` |
-| Password | `SEED_ADMIN_PASSWORD` from `.env`, or `password` if unset |
-
-Customer demo: `customer@ekyarnco.local` / `SEED_CUSTOMER_PASSWORD` (default `password`).
+> If styles do not load during `npm run dev`, make sure Vite and the page use the same host (for example run
+> `npm run dev -- --host 127.0.0.1`).
 
 ## Environment Variables
 
+Copy `.env.example` to `.env` and fill in your own values. **Never commit `.env` or real keys.**
+
 ```env
-STRIPE_KEY=pk_test_...
-STRIPE_SECRET=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://127.0.0.1:8000
+
+# Stripe (leave empty to keep card payment off)
+STRIPE_KEY=
+STRIPE_SECRET=
+STRIPE_WEBHOOK_SECRET=
+
+# Mail (use a real SMTP service in production)
+MAIL_MAILER=log
 
 SHOP_NAME="EK Yarn Co."
 SHOP_CURRENCY=PKR
 SHOP_SHIPPING_FLAT=250
+SHOP_GIFT_WRAP_FEE=150
+SHOP_WHATSAPP=
 
-# Demo seed passwords (change in production)
+# Passwords used only by the seeder — choose your own
 SEED_ADMIN_PASSWORD=
 SEED_CUSTOMER_PASSWORD=
 
@@ -89,50 +134,28 @@ SEED_CUSTOMER_PASSWORD=
 # SANCTUM_TOKEN_EXPIRATION=10080
 ```
 
-## Demo Accounts
-
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@ekyarnco.local | set via `SEED_ADMIN_PASSWORD` (default `password`) |
-| Customer | customer@ekyarnco.local | set via `SEED_CUSTOMER_PASSWORD` (default `password`) |
-
 ## REST API (`/api/v1`)
 
 The Blade storefront is unchanged. Mobile and external clients can use the versioned JSON API alongside it.
 
-**Base URL:** `http://127.0.0.1:8000/api/v1`
-
-### Authentication
+**Base URL:** `/api/v1`
 
 ```http
 POST /api/v1/auth/login
 Content-Type: application/json
 
-{"email":"customer@ekyarnco.local","password":"..."}
+{"email":"you@example.com","password":"your-password"}
 ```
 
-Use the returned token on protected routes:
+Send the returned token on protected routes:
 
 ```http
 Authorization: Bearer {token}
 Accept: application/json
 ```
 
-### Guest cart (API)
-
-Unauthenticated clients receive a `guest_cart_token` when adding to cart. Send it on subsequent cart/checkout requests:
-
-```http
-X-Guest-Cart-Token: {uuid}
-```
-
-Guest orders return a `guest_access_token` in the checkout response. Use it to confirm payment or view the order:
-
-```http
-X-Guest-Order-Token: {token}
-```
-
-### Main endpoint groups
+Guests receive a `guest_cart_token` when adding to the cart (send it as `X-Guest-Cart-Token`) and a
+`guest_access_token` after checkout (send it as `X-Guest-Order-Token`).
 
 | Group | Prefix | Auth |
 |-------|--------|------|
@@ -142,108 +165,32 @@ X-Guest-Order-Token: {token}
 | Account | `/profile`, `/addresses`, `/orders` | Bearer + verified email |
 | Admin | `/admin/*` | Bearer + admin role |
 
-Run `php artisan route:list --path=api` for the full route map.
-
-### API documentation
-
-```bash
-composer install
-php artisan scribe:generate
-```
-
-Then open `/docs` in the browser (generated by Scribe).
-
-### API tests
-
-```bash
-php artisan test --filter=Api
-```
+Run `php artisan route:list --path=api` for the full route map. Generate the docs with `php artisan scribe:generate`
+and open `/docs`.
 
 ## Running Tests
 
 ```bash
 php artisan test
+php artisan test --filter=ModulesAndInvoiceTest   # modules, promo pop-up, invoices
+php artisan test --filter=Api                     # REST API
 ```
 
 ## Production Checklist
 
-- Set `APP_ENV=production`, `APP_DEBUG=false`
-- Use HTTPS; change the seeded admin password (`SEED_ADMIN_PASSWORD` + `php artisan accounts:sync-passwords` if used)
-- Prefer `CACHE_STORE=redis` and `SESSION_DRIVER=redis` (or `file` if Redis is unavailable); set `SESSION_ENCRYPT=true`
-- Configure MySQL database
-- Set Stripe live keys and webhook endpoint: `POST /webhooks/stripe`
-- Configure SMTP for order/contact emails
-- Build front-end assets: `npm ci && npm run build`
-- Cache Laravel config/routes/views/events:
+- `APP_ENV=production`, `APP_DEBUG=false`, HTTPS enabled
+- Set strong passwords for the seeded accounts, or create your own admin and remove the demo customer
+- MySQL configured; run `php artisan migrate --force`
+- Real SMTP configured (`MAIL_MAILER` is `log` by default, which sends nothing) and a queue worker running: `php artisan queue:work`
+- Stripe live keys and webhook (`POST /webhooks/stripe`) — or switch the Card payment module off in `Admin → Modules`
+- Real phone, email and address under `Admin → Settings` (the seed data is placeholder text)
+- `php artisan storage:link`, then `npm ci && npm run build`
+- Prefer `CACHE_STORE=redis` and `SESSION_DRIVER=redis` (or `file`); set `SESSION_ENCRYPT=true`
+- Cache framework files:
   ```bash
   php artisan config:cache
   php artisan route:cache
   php artisan view:cache
   php artisan event:cache
   ```
-- Set up queue worker for mail: `php artisan queue:work`
 - Confirm security headers (CSP, HSTS) and Sanctum token expiry (`SANCTUM_TOKEN_EXPIRATION`, default 7 days)
-## Storefront Features Added
-
-- **Reviews & ratings** with verified-buyer auto-publish and admin approval (`Admin → Reviews`)
-- **Wishlist** for guests and customers (merged on login)
-- **Custom order requests** with reference photo (`Admin → Custom Orders`)
-- **Gift options** at checkout (wrap fee `SHOP_GIFT_WRAP_FEE`, message, hide prices on invoice)
-- **Order tracking** at `/track-order` (order number + email or phone)
-- **WhatsApp** buttons (`SHOP_WHATSAPP`, otherwise the contact phone)
-- **Back-in-stock email alerts**, newsletter popup, low-stock badges, recently viewed, image zoom/lightbox
-- **Free-shipping progress bar** in the cart
-- **Coupons** are built but currently switched off — search the code for `COUPONS (disabled` to re-enable.
-
-## CMS / Page Builder
-
-`Admin → CMS Pages` edits every storefront page (Home, About, Products, Contact, Custom Order,
-Track Order, Shipping/Returns/Care) and lets you create new pages served at `/p/{slug}`.
-
-- Pages are an ordered list of **sections** (hero, icon cards, stats, text, image + text, product grid,
-  collections, testimonials, FAQ, gallery, call-to-action, divider, info card, quote). Reorder, hide,
-  duplicate, delete, restyle, and upload images from the editor.
-- Until a layout is saved, a page shows its built-in design (`app/Support/Cms/PageDefaults.php`);
-  **Reset to original** returns to it.
-- Add a new block type: describe it in `app/Support/Cms/SectionSchema.php` and create
-  `resources/views/components/cms/{type}.blade.php`. The editor form, validation and sanitising follow the schema.
-- `Admin → Navigation & Footer` controls the header menu, footer links/text, top-bar message and social links.
-- Uploaded CMS images need the storage link: `php artisan storage:link`.
-
-## Responsive Design
-
-The storefront and admin are built mobile-first and checked at 320 / 390 / 414 / 600 / 768 / 820 / 1024 / 1440 px.
-Tablets (below 1024px) use the hamburger menu; phones also get the bottom tab bar.
-
-## Admin: Dashboard vs Statistics
-
-- **Dashboard** is for *today*: sales/orders today, a "needs your attention" to-do list (orders to confirm or ship,
-  custom requests, messages, reviews, stock), recent orders and low stock.
-- **Statistics** is for *analysis*: pick a period (today / 7 / 30 days / month / last month / year / custom); every
-  number is compared with the previous period of the same length. Charts cover sales over time, best weekdays and hours,
-  order status, payment methods, best sellers, collections, delivery cities, new vs returning customers, audience growth,
-  stock health, wishlist demand, custom orders and review ratings, plus a plain-language summary and a CSV export.
-  The logic lives in `app/Services/StatisticsService.php`.
-- **Settings → Change your password** lets the signed-in admin change their own password.
-
-## Guest customers & offers (email / SMS)
-
-- Every order saves a normalised contact record (`contact_name`, `contact_email`, `contact_phone` in international digits,
-  and `marketing_opt_in`). Guests are matched across orders by email — or by phone when no email is given.
-- Statistics count guests as customers (new vs returning, guest vs account).
-- `Admin → Customers → Everyone who ordered` lists guests and account holders, with filters and a **CSV download**
-  for email/SMS tools. Checkout has a "Send me news and special offers" tick box; the list shows the latest choice per person.
-- The admin dashboard has a **Refresh** button and optional 45-second **Auto-refresh** that updates numbers, the to-do list and
-  sidebar badges in place and announces new orders.
-
-## Dashboard → Modules & Invoice
-
-- **Modules** (`Admin → Modules`) switches shop features on/off and tunes them without code changes: accepting orders
-  (with a closed message), guest checkout, payment methods, gift options, coupons, stock badges, reviews, wishlist,
-  newsletter pop-up, back-in-stock alerts, recently viewed, custom orders, order tracking, WhatsApp and customer invoices.
-  Add a feature switch in `app/Support/Modules/ModuleRegistry.php` and check it with `module_enabled('key')` /
-  `module_value('key', 'field')`; protect routes with `->middleware('module:key')`.
-- **Invoice** (`Admin → Invoice`) controls the PDF invoice: company details (“From”), tax number, logo, accent colour,
-  paper size, number prefix, 17 show/hide switches, wording, bank details, terms and the copyright line
-  (“© {year} EK Yarn Co. All rights reserved.”, also saved as the PDF author). Preview with a sample or the latest order.
-  Rendering lives in `app/Services/InvoiceBuilder.php` and `resources/views/invoices/order.blade.php`.
