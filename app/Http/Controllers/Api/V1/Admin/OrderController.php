@@ -90,7 +90,7 @@ class OrderController extends ApiController
         ]);
 
         $shipping = round((float) $data['shipping'], 2);
-        $total = round((float) $order->subtotal + (float) $order->tax + $shipping, 2);
+        $total = round((float) $order->subtotal - (float) $order->discount + (float) $order->tax + (float) $order->gift_wrap_fee + $shipping, 2);
 
         $order->update(['shipping' => $shipping, 'total' => $total]);
         $order->payment?->update(['amount' => $total]);

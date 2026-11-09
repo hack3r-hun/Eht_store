@@ -9,8 +9,6 @@ class AboutController extends Controller
 {
     public function index()
     {
-        $page = Page::where('slug', 'about')->first();
-
-        return view('storefront.about', compact('page'));
+        return view('storefront.about', ['page' => Page::forSlug('about')]);
     }
 }

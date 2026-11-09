@@ -6,6 +6,12 @@
     html {
         scroll-behavior: smooth;
     }
+
+    /* Safety net: decorative blobs / zoomed images can never create sideways page scroll.
+       `clip` (unlike `hidden`) keeps position:sticky headers working. */
+    body {
+        overflow-x: clip;
+    }
 }
 
 @layer components {
@@ -604,3 +610,130 @@
         stroke-dashoffset: 0 !important;
     }
 }
+
+/* ===== Storefront effects ===== */
+
+.scroll-progress {
+    position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 100;
+    background: linear-gradient(90deg, #E2725B, #8A9A5B);
+    transform: scaleX(0); transform-origin: left; pointer-events: none;
+    will-change: transform;
+}
+
+.site-header { transition: box-shadow 0.3s ease, background-color 0.3s ease; }
+.site-header.is-scrolled { box-shadow: 0 8px 28px -12px rgba(54, 69, 79, 0.28); }
+
+.back-to-top {
+    position: fixed; right: 1.1rem; bottom: 5.25rem; z-index: 44;
+    width: 2.75rem; height: 2.75rem; border-radius: 9999px;
+    display: flex; align-items: center; justify-content: center;
+    background: #E2725B; color: #fff; box-shadow: 0 10px 24px -8px rgba(226, 114, 91, 0.6);
+    opacity: 0; transform: translateY(16px) scale(0.8); pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s;
+}
+.back-to-top.with-tabbar { bottom: calc(8.25rem + env(safe-area-inset-bottom)); }
+@media (min-width: 768px) { .back-to-top.with-tabbar { bottom: 5.25rem; } }
+.back-to-top.is-shown { opacity: 1; transform: none; pointer-events: auto; }
+.back-to-top:hover { background: #cf5f49; transform: translateY(-3px); }
+
+[data-magnetic] { transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s, background-color 0.3s; }
+
+.btn-accent, .btn-outline { position: relative; overflow: hidden; }
+.ripple-dot {
+    position: absolute; border-radius: 9999px; background: rgba(255, 255, 255, 0.45);
+    transform: scale(0); animation: ripple 0.6s ease-out forwards; pointer-events: none;
+}
+@keyframes ripple { to { transform: scale(1); opacity: 0; } }
+
+.is-loading { cursor: progress; opacity: 0.85; }
+.is-loading::before {
+    content: ''; width: 1rem; height: 1rem; border-radius: 9999px;
+    border: 2px solid rgba(255, 255, 255, 0.4); border-top-color: #fff;
+    animation: spin 0.7s linear infinite; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.split-word {
+    display: inline-block; opacity: 0; transform: translateY(0.6em) rotate(2deg);
+    animation: wordIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes wordIn { to { opacity: 1; transform: none; } }
+
+.confetti-wrap { position: fixed; inset: 0; z-index: 200; pointer-events: none; overflow: hidden; }
+.confetti-wrap i {
+    position: absolute; width: 8px; height: 12px; opacity: 0;
+    animation: confettiBurst 1.9s cubic-bezier(0.15, 0.7, 0.3, 1) forwards;
+}
+@keyframes confettiBurst {
+    0% { opacity: 1; transform: translate(0, 0) rotate(0); }
+    70% { opacity: 1; }
+    100% { opacity: 0; transform: translate(var(--dx), calc(var(--dy) + 260px)) rotate(var(--rot)); }
+}
+
+.draw-check { stroke-dasharray: 30; stroke-dashoffset: 30; animation: drawCheck 0.6s 0.35s ease-out forwards; }
+@keyframes drawCheck { to { stroke-dashoffset: 0; } }
+
+/* Product cards: soft staggered lift when scrolled in, plus image zoom already on hover */
+.card-hover:hover { box-shadow: 0 24px 48px -20px rgba(54, 69, 79, 0.25); }
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .js-reveal [data-reveal]:not(.is-visible) { opacity: 1 !important; transform: none !important; pointer-events: auto !important; }
+    [data-reveal] { transition: none !important; }
+    .split-word { animation: none; opacity: 1; transform: none; }
+    .draw-check { animation: none; stroke-dashoffset: 0; }
+    .scroll-progress, .back-to-top { transition: none; }
+    .card-hover:hover { transform: none; }
+}
+
+/* ===== Wishlist heart + WhatsApp button ===== */
+.wishlist-heart {
+    position: absolute; top: 0.75rem; right: 0.75rem; z-index: 20;
+    width: 2.25rem; height: 2.25rem; border-radius: 9999px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255, 255, 255, 0.92); color: #36454F;
+    box-shadow: 0 4px 14px -4px rgba(54, 69, 79, 0.35);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s, background-color 0.2s;
+}
+.wishlist-heart:hover { transform: scale(1.12); color: #E2725B; }
+.wishlist-heart:active { transform: scale(0.9); }
+.wishlist-heart.is-saved { color: #E2725B; animation: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+.whatsapp-fab {
+    position: fixed; right: 1rem; bottom: 1.25rem; z-index: 45;
+    width: 3rem; height: 3rem; border-radius: 9999px;
+    display: flex; align-items: center; justify-content: center;
+    background: #25D366; color: #fff;
+    box-shadow: 0 10px 24px -8px rgba(37, 211, 102, 0.7);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.whatsapp-fab::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; background: #25D366;
+    z-index: -1; animation: waPulse 2.6s ease-out infinite;
+}
+.whatsapp-fab.with-tabbar { bottom: calc(4.5rem + env(safe-area-inset-bottom)); }
+@media (min-width: 768px) { .whatsapp-fab.with-tabbar { bottom: 1.25rem; } }
+.whatsapp-fab:hover { transform: scale(1.1) rotate(-6deg); }
+@keyframes waPulse { 0% { transform: scale(1); opacity: 0.55; } 100% { transform: scale(1.7); opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .whatsapp-fab::before, .wishlist-heart.is-saved { animation: none; }
+}
+
+/* ===== CMS rich text (admin-authored HTML) ===== */
+.cms-prose { color: #475569; line-height: 1.8; font-size: 1.0625rem; overflow-wrap: anywhere; }
+.cms-prose > * + * { margin-top: 1.1em; }
+.cms-prose h2, .cms-prose h3, .cms-prose h4 { color: #36454F; font-weight: 700; line-height: 1.3; margin-top: 1.6em; }
+.cms-prose h2 { font-size: 1.5rem; }
+.cms-prose h3 { font-size: 1.25rem; }
+.cms-prose a { color: #E2725B; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.cms-prose a:hover { color: #cf5f49; }
+.cms-prose strong { color: #36454F; font-weight: 700; }
+.cms-prose ul, .cms-prose ol { padding-left: 1.4em; }
+.cms-prose ul { list-style: disc; }
+.cms-prose ol { list-style: decimal; }
+.cms-prose li + li { margin-top: 0.4em; }
+.cms-prose blockquote { border-left: 4px solid #E2725B; padding-left: 1em; font-style: italic; color: #36454F; }
+.cms-prose img { max-width: 100%; height: auto; border-radius: 1rem; }
+.cms-prose-dark { color: rgba(245, 245, 220, 0.8); }
+.cms-prose-dark h2, .cms-prose-dark h3, .cms-prose-dark h4, .cms-prose-dark strong { color: #fff; }

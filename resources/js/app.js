@@ -4,6 +4,7 @@ import { initScrollReveal } from './scroll-reveal';
 import { registerToastStore } from './toast';
 import { initBackButtons } from './back-button';
 import { initHeroParallax } from './hero-parallax';
+import { initEffects } from './effects';
 
 window.axios = axios;
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
@@ -22,6 +23,7 @@ document.addEventListener('alpine:init', () => {
 initScrollReveal();
 initBackButtons();
 initHeroParallax();
+initEffects();
 Alpine.start();
 
 // Registering a service worker (even a no-op passthrough) is what makes the

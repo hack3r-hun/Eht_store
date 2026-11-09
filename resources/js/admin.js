@@ -2,6 +2,8 @@ import axios from 'axios';
 import Alpine from 'alpinejs';
 import 'cropperjs/dist/cropper.css';
 import { registerAdminImageCropper } from './admin-image-cropper';
+import { registerPageBuilder } from './admin-page-builder';
+import { registerDashboardLive } from './admin-live';
 import { initScrollReveal } from './scroll-reveal';
 import { registerToastStore } from './toast';
 import { initBackButtons } from './back-button';
@@ -26,6 +28,8 @@ document.addEventListener('alpine:init', () => {
 });
 
 registerAdminImageCropper(Alpine);
+registerPageBuilder(Alpine);
+registerDashboardLive(Alpine);
 initScrollReveal();
 initBackButtons();
 initStatisticsCharts();

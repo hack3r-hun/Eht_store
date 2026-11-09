@@ -17,6 +17,18 @@ class ProductVariant extends Model
         'XL' => 4,
     ];
 
+    protected static function booted(): void
+    {
+        // Back-in-stock alerts: fire when a sold-out size gets stock again.
+        static::updated(function (ProductVariant $variant) {
+            if ($variant->wasChanged('stock_quantity')
+                && (int) $variant->getOriginal('stock_quantity') < 1
+                && $variant->stock_quantity > 0) {
+                \App\Services\StockAlertService::notifyRestocked($variant);
+            }
+        });
+    }
+
     protected $fillable = [
         'product_id',
         'size',

@@ -34,6 +34,16 @@ class Order extends Model
         'total',
         'shipping_address',
         'notes',
+        'discount',
+        'coupon_code',
+        'gift_wrap',
+        'gift_wrap_fee',
+        'gift_message',
+        'gift_hide_prices',
+        'contact_name',
+        'contact_email',
+        'contact_phone',
+        'marketing_opt_in',
     ];
 
     protected function casts(): array
@@ -43,6 +53,11 @@ class Order extends Model
             'tax' => 'decimal:2',
             'shipping' => 'decimal:2',
             'total' => 'decimal:2',
+            'discount' => 'decimal:2',
+            'gift_wrap' => 'boolean',
+            'gift_wrap_fee' => 'decimal:2',
+            'gift_hide_prices' => 'boolean',
+            'marketing_opt_in' => 'boolean',
             'shipping_address' => 'array',
             'status' => OrderStatus::class,
             'payment_method' => PaymentMethod::class,

@@ -23,12 +23,7 @@
         @else
             <div
                 x-data="{
-                    totals: {
-                        subtotal: @js(shop_money($totals['subtotal'])),
-                        tax: @js(shop_money($totals['tax'])),
-                        shipping: @js($totals['shipping'] > 0 ? shop_money($totals['shipping']) : 'Free'),
-                        total: @js(shop_money($totals['total'])),
-                    },
+                    totals: @js($presented),
                     lineTotals: {
                         @foreach($items as $item)
                             {{ $item->id }}: @js(shop_money($item->line_total)),
@@ -44,6 +39,17 @@
             >
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="lg:col-span-2 space-y-4 animate-fade-in-up">
+                        @if($totals['free_shipping_threshold'] > 0)
+                            <div class="rounded-2xl border border-oat-200 bg-white p-4 shadow-card">
+                                <p class="text-sm font-semibold text-charcoal-700 flex items-center gap-2">
+                                    <x-icon name="truck" class="w-5 h-5 text-sage-600" />
+                                    <span x-text="totals.shipMessage"></span>
+                                </p>
+                                <div class="mt-3 h-2.5 rounded-full bg-oat-200 overflow-hidden" role="progressbar" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="totals.shipProgress">
+                                    <div class="h-full rounded-full bg-gradient-to-r from-terracotta-400 to-sage-500 transition-all duration-700 ease-out" :style="'width: ' + totals.shipProgress + '%'"></div>
+                                </div>
+                            </div>
+                        @endif
                         @foreach($items as $item)
                             <div
                                 x-show="!removedItems[{{ $item->id }}]"
@@ -92,6 +98,9 @@
                             <h2 class="font-semibold text-charcoal-700 text-lg mb-6">Order Summary</h2>
                             <div class="space-y-3 text-sm">
                                 <div class="flex justify-between"><span class="text-slate-500">Subtotal</span><span class="font-medium" x-text="totals.subtotal"></span></div>
+                                <div class="flex justify-between text-sage-700" x-show="totals.hasDiscount" x-cloak>
+                                    <span>Coupon{{ $couponCode ? ' '.$couponCode : '' }}</span><span class="font-medium" x-text="totals.discount"></span>
+                                </div>
                                 @if($totals['tax'] > 0)
                                     <div class="flex justify-between"><span class="text-slate-500">Tax</span><span class="font-medium" x-text="totals.tax"></span></div>
                                 @endif
@@ -105,6 +114,23 @@
                                     <span class="text-sage-700" x-text="totals.total"></span>
                                 </div>
                             </div>
+                            @if(module_enabled('coupons'))
+                            <div class="mt-6 border-t border-slate-100 pt-5">
+                                @if($couponCode)
+                                    <form action="{{ route('cart.coupon.destroy') }}" method="POST" class="flex items-center justify-between rounded-xl bg-sage-50 px-4 py-3 text-sm" data-no-loading>
+                                        @csrf @method('DELETE')
+                                        <span class="font-semibold text-sage-800">🎟 {{ $couponCode }} applied</span>
+                                        <button type="submit" class="text-slate-500 hover:text-red-600 font-medium">Remove</button>
+                                    </form>
+                                @else
+                                    <form action="{{ route('cart.coupon.store') }}" method="POST" class="flex gap-2">
+                                        @csrf
+                                        <input type="text" name="code" placeholder="Coupon code" maxlength="50" class="input-field !py-2.5 uppercase" aria-label="Coupon code" required>
+                                        <button type="submit" class="btn-accent !py-2.5 !px-4 shrink-0">Apply</button>
+                                    </form>
+                                @endif
+                            </div>
+                            @endif
                             <a href="{{ route('checkout.index') }}" class="btn-primary w-full mt-6 text-center">Proceed to Checkout</a>
                             <a href="{{ route('products.index') }}" class="block text-center text-sm text-sage-700 font-medium mt-4 hover:text-sage-800">Continue Shopping</a>
                         </div>

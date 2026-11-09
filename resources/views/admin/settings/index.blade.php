@@ -51,4 +51,41 @@
 
         <button type="submit" class="btn-primary">Save Settings</button>
     </form>
+
+    {{-- Change password (separate form so it never submits the shop settings) --}}
+    <form action="{{ route('admin.settings.password') }}" method="POST" class="max-w-xl mt-10" x-data="{ show: false }">
+        @csrf @method('PUT')
+        <div class="admin-card admin-card-pad space-y-4">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <h2 class="font-bold text-slate-900">Change your password</h2>
+                    <p class="text-sm text-slate-500 mt-0.5">Use a password you don't use anywhere else. {{ \App\Http\Controllers\Admin\AdminPasswordController::requirementsHint() }}</p>
+                </div>
+                <span class="w-10 h-10 shrink-0 rounded-xl bg-sage-50 text-sage-700 flex items-center justify-center"><x-icon name="shield" class="w-5 h-5" /></span>
+            </div>
+
+            @if($errors->updatePassword->any())
+                <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    <ul class="list-disc list-inside">@foreach($errors->updatePassword->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+                </div>
+            @endif
+
+            @foreach([
+                'current_password' => ['Current password', 'current-password'],
+                'password' => ['New password', 'new-password'],
+                'password_confirmation' => ['Confirm new password', 'new-password'],
+            ] as $name => [$label, $autocomplete])
+                <div>
+                    <label for="{{ $name }}" class="block text-sm font-medium text-slate-700 mb-2">{{ $label }}</label>
+                    <input id="{{ $name }}" name="{{ $name }}" :type="show ? 'text' : 'password'" autocomplete="{{ $autocomplete }}" required class="input-field">
+                </div>
+            @endforeach
+
+            <label class="inline-flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                <input type="checkbox" x-model="show" class="rounded text-sage-600 focus:ring-sage-500"> Show passwords
+            </label>
+
+            <div><button type="submit" class="btn-primary">Update password</button></div>
+        </div>
+    </form>
 @endsection

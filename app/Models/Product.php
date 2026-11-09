@@ -36,6 +36,7 @@ class Product extends Model
         'specifications',
         'is_active',
         'is_featured',
+        'lead_time_days',
     ];
 
     protected function casts(): array
@@ -52,6 +53,11 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function approvedReviews(): HasMany
+    {
+        return $this->hasMany(Review::class)->where('is_approved', true);
     }
 
     public function images(): HasMany

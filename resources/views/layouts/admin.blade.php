@@ -18,7 +18,7 @@
         <div x-show="sidebarOpen" x-transition.opacity @click="sidebarOpen = false" class="fixed inset-0 bg-slate-900/30 z-40 md:hidden" x-cloak></div>
 
         {{-- Sidebar --}}
-        <aside class="fixed md:static inset-y-0 left-0 z-50 w-64 lg:w-72 bg-white border-r border-slate-200 shrink-0 flex flex-col transform transition-transform duration-300 md:translate-x-0"
+        <aside class="fixed md:sticky inset-y-0 md:inset-y-auto md:top-0 md:h-screen md:self-start left-0 z-50 w-64 lg:w-72 bg-white border-r border-slate-200 shrink-0 flex flex-col transform transition-transform duration-300 md:translate-x-0"
                :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
             <div class="px-5 py-5 border-b border-slate-100">
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 group">
@@ -30,7 +30,7 @@
                 </a>
             </div>
 
-            <nav class="p-4 space-y-1 flex-1 overflow-y-auto">
+            <nav id="admin-nav" class="p-4 space-y-1 flex-1 overflow-y-auto">
                 @php
                     $links = [
                         ['route' => 'admin.dashboard', 'label' => 'Dashboard', 'match' => 'admin.dashboard', 'icon' => 'home'],
@@ -40,9 +40,18 @@
                         ['route' => 'admin.orders.index', 'label' => 'Orders', 'match' => 'admin.orders.*', 'icon' => 'cart', 'badge' => $sidebarBadges['pending_orders'] ?? 0, 'badgeTone' => 'sage'],
                         ['route' => 'admin.customers.index', 'label' => 'Customers', 'match' => 'admin.customers.*', 'icon' => 'users'],
                         ['route' => 'admin.messages.index', 'label' => 'Messages', 'match' => 'admin.messages.*', 'icon' => 'mail', 'badge' => $sidebarBadges['unread_messages'] ?? 0, 'badgeTone' => 'terracotta'],
+                        ['route' => 'admin.reviews.index', 'label' => 'Reviews', 'match' => 'admin.reviews.*', 'icon' => 'sparkles', 'badge' => $sidebarBadges['pending_reviews'] ?? 0, 'badgeTone' => 'amber'],
+                        ['route' => 'admin.custom-orders.index', 'label' => 'Custom Orders', 'match' => 'admin.custom-orders.*', 'icon' => 'clipboard', 'badge' => $sidebarBadges['new_custom_orders'] ?? 0, 'badgeTone' => 'terracotta'],
+                        ['route' => 'admin.coupons.index', 'label' => 'Coupons', 'match' => 'admin.coupons.*', 'icon' => 'check-circle', 'module' => 'coupons'],
+                        ['route' => 'admin.subscribers.index', 'label' => 'Subscribers', 'match' => 'admin.subscribers.*', 'icon' => 'users'],
                         ['route' => 'admin.pages.index', 'label' => 'CMS Pages', 'match' => 'admin.pages.*', 'icon' => 'document'],
+                        ['route' => 'admin.invoice.edit', 'label' => 'Invoice', 'match' => 'admin.invoice.*', 'icon' => 'document'],
+                        ['route' => 'admin.modules.index', 'label' => 'Modules', 'match' => 'admin.modules.*', 'icon' => 'plug'],
+                        ['route' => 'admin.site.edit', 'label' => 'Navigation & Footer', 'match' => 'admin.site.*', 'icon' => 'globe'],
                         ['route' => 'admin.settings.index', 'label' => 'Settings', 'match' => 'admin.settings.*', 'icon' => 'cog'],
                     ];
+                    // Entries tied to a Dashboard → Modules switch disappear while that module is off.
+                    $links = array_values(array_filter($links, fn ($link) => empty($link['module']) || module_enabled($link['module'])));
                 @endphp
                 @foreach($links as $link)
                     <a href="{{ route($link['route']) }}"
@@ -102,6 +111,12 @@
                                     request()->routeIs('admin.categories.*') => route('admin.categories.index'),
                                     request()->routeIs('admin.orders.*') => route('admin.orders.index'),
                                     request()->routeIs('admin.messages.*') => route('admin.messages.index'),
+                                    request()->routeIs('admin.reviews.*') => route('admin.reviews.index'),
+                                    request()->routeIs('admin.custom-orders.*') => route('admin.custom-orders.index'),
+                                    request()->routeIs('admin.subscribers.*') => route('admin.subscribers.index'),
+                                    request()->routeIs('admin.invoice.*') => route('admin.invoice.edit'),
+                                    request()->routeIs('admin.modules.*') => route('admin.modules.index'),
+                                    request()->routeIs('admin.site.*') => route('admin.site.edit'),
                                     request()->routeIs('admin.pages.*') => route('admin.pages.index'),
                                     request()->routeIs('admin.customers.*') => route('admin.customers.index'),
                                     request()->routeIs('admin.settings.*') => route('admin.settings.index'),

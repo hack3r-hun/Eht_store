@@ -39,9 +39,21 @@
                         </div>
                     @endforeach
                 </div>
+                @if($order->gift_wrap)
+                    <div class="mt-4 rounded-xl bg-terracotta-50 border border-terracotta-100 p-4 text-sm text-charcoal-700">
+                        <p class="font-semibold mb-1">🎁 Gift order{{ $order->gift_hide_prices ? ' — hide prices on packing slip' : '' }}</p>
+                        @if($order->gift_message)<p class="italic">“{{ $order->gift_message }}”</p>@endif
+                    </div>
+                @endif
                 <div class="mt-4 pt-4 border-t space-y-2 text-sm">
                     <div class="flex justify-between"><span class="text-slate-500">Subtotal</span><span>{{ shop_money($order->subtotal) }}</span></div>
+                    @if($order->discount > 0)
+                        <div class="flex justify-between text-sage-700"><span>Coupon {{ $order->coupon_code }}</span><span>− {{ shop_money($order->discount) }}</span></div>
+                    @endif
                     <div class="flex justify-between"><span class="text-slate-500">Tax</span><span>{{ shop_money($order->tax) }}</span></div>
+                    @if($order->gift_wrap)
+                        <div class="flex justify-between"><span class="text-slate-500">Gift wrap</span><span>{{ shop_money($order->gift_wrap_fee) }}</span></div>
+                    @endif
                     <div class="flex justify-between"><span class="text-slate-500">Shipping</span><span>{{ $order->shipping > 0 ? shop_money($order->shipping) : 'Free' }}</span></div>
                     <div class="flex justify-between font-bold text-base pt-2 border-t border-slate-50">
                         <span>Total</span>

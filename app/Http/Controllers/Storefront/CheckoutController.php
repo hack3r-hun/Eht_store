@@ -27,6 +27,14 @@ class CheckoutController extends Controller
 
     public function index()
     {
+        if (! module_enabled('accepting_orders')) {
+            return redirect()->route('cart.index')->with('error', (string) module_value('accepting_orders', 'closed_message'));
+        }
+
+        if (! module_enabled('guest_checkout') && ! auth()->check()) {
+            return redirect()->guest(route('login'))->with('info', 'Please sign in or create an account to check out.');
+        }
+
         $items = $this->cartService->items();
 
         if ($items->isEmpty()) {
@@ -45,9 +53,10 @@ class CheckoutController extends Controller
         }
 
         $city = $request->string('city')->toString();
-        $totals = $this->checkoutService->calculateTotals($city);
+        $totals = $this->checkoutService->calculateTotals($city, $request->boolean('gift_wrap'));
 
         return response()->json([
+            'gift_fee_label' => $totals['gift_fee'] > 0 ? shop_money($totals['gift_fee']) : '',
             'shipping' => $totals['shipping'],
             'shipping_label' => $totals['shipping'] > 0 ? shop_money($totals['shipping']) : 'Free',
             'total' => $totals['total'],

@@ -185,6 +185,11 @@
                 @error('images')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
                 @error('images.*')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
             </x-admin.image-uploader>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Made-to-order lead time (days)</label>
+                <input type="number" name="lead_time_days" min="1" max="120" value="{{ old('lead_time_days', $product->lead_time_days ?? '') }}" class="input-field max-w-xs" placeholder="Leave empty for the shop default">
+                @error('lead_time_days')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
+            </div>
             <div class="flex gap-6">
                 <input type="hidden" name="is_active" value="0">
                 <label class="flex items-center gap-2"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $product->is_active ?? true)) class="rounded text-sage-600"> Active</label>

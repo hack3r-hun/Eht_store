@@ -8,7 +8,34 @@
         : $product->is_on_sale;
 @endphp
 
+@php
+    $lowStockLimit = (int) module_value('low_stock_badges', 'threshold', config('shop.low_stock_threshold', 5));
+    $isLowStock = module_enabled('low_stock_badges') && $product->is_in_stock && $product->stock_quantity <= $lowStockLimit;
+    $ratingCount = module_enabled('reviews') ? (int) ($product->approved_reviews_count ?? 0) : 0;
+    $ratingAvg = $ratingCount ? round((float) $product->approved_reviews_avg_rating, 1) : null;
+@endphp
+
 <article class="group bg-white rounded-2xl border border-oat-200 shadow-card overflow-hidden card-glow card-hover h-full flex flex-col">
+    @if(module_enabled('wishlist'))
+    <button
+        type="button"
+        class="wishlist-heart"
+        x-data="{ saved: @js(in_array($product->id, wishlist_ids(), true)), busy: false,
+            async toggle() {
+                if (this.busy) return;
+                this.busy = true;
+                try { this.saved = (await window.toggleWishlist({{ $product->id }})).added; }
+                catch (e) { window.showToast?.('Could not update your wishlist. Please try again.', 'error'); }
+                finally { this.busy = false; }
+            } }"
+        @click.prevent="toggle()"
+        :class="saved && 'is-saved'"
+        :aria-pressed="saved"
+        aria-label="Save {{ $product->name }} to wishlist"
+    >
+        <svg viewBox="0 0 24 24" class="w-5 h-5" stroke="currentColor" stroke-width="1.8" :fill="saved ? 'currentColor' : 'none'"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/></svg>
+    </button>
+    @endif
     <a
         href="{{ route('products.show', $product->slug) }}"
         class="block relative overflow-hidden aspect-square bg-gradient-to-br from-oat-100 to-terracotta-50"
@@ -48,9 +75,12 @@
             <span class="absolute top-3 left-3 badge-sale">Sale</span>
         @endif
         @if($product->is_featured)
-            <span class="absolute top-3 right-3 bg-sage-600 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-lg">Featured</span>
+            <span class="absolute top-3 right-14 bg-sage-600 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-lg">Featured</span>
         @elseif(!$product->is_in_stock)
-            <span class="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg">Out of Stock</span>
+            <span class="absolute top-3 right-14 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg">Out of Stock</span>
+        @endif
+        @if($isLowStock)
+            <span class="absolute top-12 left-3 inline-flex items-center gap-1 bg-amber-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-md shadow animate-pulse-soft">Only {{ $product->stock_quantity }} left</span>
         @endif
         <div class="absolute bottom-3 left-3 right-3 opacity-100 translate-y-0 md:opacity-0 md:translate-y-2 md:group-hover:opacity-100 md:group-hover:translate-y-0 transition-all duration-300">
             <span class="block text-center text-xs font-semibold text-white bg-charcoal-700/90 backdrop-blur-sm py-2 rounded-lg">
@@ -63,6 +93,11 @@
         <a href="{{ route('products.show', $product->slug) }}">
             <h3 class="font-semibold text-charcoal-700 line-clamp-2 group-hover:text-sage-700 transition-colors duration-300">{{ $product->name }}</h3>
         </a>
+        @if($ratingAvg)
+            <p class="mt-1.5 flex items-center gap-1 text-xs text-slate-500" aria-label="Rated {{ $ratingAvg }} out of 5 from {{ $ratingCount }} reviews">
+                <span class="text-amber-500">★</span><span class="font-semibold text-charcoal-700">{{ number_format($ratingAvg, 1) }}</span><span>({{ $ratingCount }})</span>
+            </p>
+        @endif
         <div class="mt-auto pt-4 flex items-center justify-between gap-2">
             <div>
                 @if($hasMultipleSizes)

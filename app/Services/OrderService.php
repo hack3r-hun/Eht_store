@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Models\Order;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 
@@ -59,19 +58,11 @@ class OrderService
 
     public function generateInvoicePdf(Order $order): Response
     {
-        $order->load(['items', 'user']);
-
-        $pdf = Pdf::loadView('invoices.order', compact('order'));
-
-        return $pdf->download("invoice-{$order->order_number}.pdf");
+        return app(InvoiceBuilder::class)->build($order)->download("invoice-{$order->order_number}.pdf");
     }
 
     public function streamInvoicePdf(Order $order): Response
     {
-        $order->load(['items', 'user']);
-
-        $pdf = Pdf::loadView('invoices.order', compact('order'));
-
-        return $pdf->stream("invoice-{$order->order_number}.pdf");
+        return app(InvoiceBuilder::class)->build($order)->stream("invoice-{$order->order_number}.pdf");
     }
 }

@@ -47,6 +47,7 @@ class StoreProductRequest extends FormRequest
             'low_stock_threshold' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
             'is_featured' => ['nullable', 'boolean'],
+            'lead_time_days' => ['nullable', 'integer', 'min:1', 'max:120'],
             'specifications' => ['nullable', 'array'],
             'images' => ['nullable', 'array'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],

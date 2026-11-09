@@ -7,6 +7,15 @@ use App\Http\Controllers\Storefront\AboutController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\ContactController;
+use App\Http\Controllers\Storefront\CouponController;
+use App\Http\Controllers\Storefront\CustomOrderController;
+use App\Http\Controllers\Storefront\NewsletterController;
+use App\Http\Controllers\Storefront\PageController;
+use App\Http\Controllers\Storefront\PolicyController;
+use App\Http\Controllers\Storefront\ReviewController;
+use App\Http\Controllers\Storefront\StockAlertController;
+use App\Http\Controllers\Storefront\TrackOrderController;
+use App\Http\Controllers\Storefront\WishlistController;
 use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\ProductController;
 use App\Http\Controllers\Storefront\SitemapController;
@@ -20,6 +29,26 @@ Route::post('/contact', [ContactController::class, 'store'])->middleware('thrott
 
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
+
+Route::post('/products/{slug}/reviews', [ReviewController::class, 'store'])->middleware(['module:reviews', 'throttle:5,1'])->name('reviews.store');
+
+Route::get('/wishlist', [WishlistController::class, 'index'])->middleware('module:wishlist')->name('wishlist.index');
+Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->middleware(['module:wishlist', 'throttle:60,1'])->name('wishlist.toggle');
+
+Route::get('/custom-order', [CustomOrderController::class, 'create'])->middleware('module:custom_orders')->name('custom-order.create');
+Route::post('/custom-order', [CustomOrderController::class, 'store'])->middleware(['module:custom_orders', 'throttle:5,1'])->name('custom-order.store');
+
+Route::get('/track-order', [TrackOrderController::class, 'form'])->middleware('module:order_tracking')->name('track-order');
+Route::post('/track-order', [TrackOrderController::class, 'lookup'])->middleware(['module:order_tracking', 'throttle:10,1'])->name('track-order.lookup');
+
+Route::get('/policies', [PolicyController::class, 'index'])->name('policies');
+Route::get('/p/{slug}', [PageController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('pages.show');
+Route::post('/stock-alerts', [StockAlertController::class, 'store'])->middleware(['module:back_in_stock', 'throttle:10,1'])->name('stock-alerts.store');
+Route::post('/newsletter', [NewsletterController::class, 'store'])->middleware(['module:newsletter_popup', 'throttle:10,1'])->name('newsletter.store');
+
+// Coupons: switch on/off under Dashboard → Modules (off by default).
+Route::post('/cart/coupon', [CouponController::class, 'store'])->middleware(['module:coupons', 'throttle:20,1'])->name('cart.coupon.store');
+Route::delete('/cart/coupon', [CouponController::class, 'destroy'])->middleware('module:coupons')->name('cart.coupon.destroy');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart', [CartController::class, 'store'])->middleware('throttle:60,1')->name('cart.store');
@@ -48,7 +77,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/account/orders', [OrderHistoryController::class, 'index'])->name('account.orders.index');
     Route::get('/account/orders/{order}', [OrderHistoryController::class, 'show'])->name('account.orders.show');
-    Route::get('/account/orders/{order}/invoice', [OrderHistoryController::class, 'invoice'])->name('account.orders.invoice');
+    Route::get('/account/orders/{order}/invoice', [OrderHistoryController::class, 'invoice'])->middleware('module:invoice')->name('account.orders.invoice');
 });
 
 require __DIR__.'/auth.php';

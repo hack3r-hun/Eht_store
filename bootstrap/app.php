@@ -59,6 +59,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
+            'module' => \App\Http\Middleware\EnsureModuleEnabled::class,
             'verified.api' => \App\Http\Middleware\EnsureApiEmailVerified::class,
             'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
             'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,

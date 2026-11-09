@@ -63,3 +63,95 @@ if (! function_exists('shop_name')) {
         return (string) shop_config('name', 'EK Yarn Co.');
     }
 }
+
+if (! function_exists('whatsapp_url')) {
+    /** wa.me deep link built from the shop phone (or SHOP_WHATSAPP), optionally with a prefilled message. */
+    function whatsapp_url(?string $message = null): string
+    {
+        $number = preg_replace('/\D+/', '', (string) module_value('whatsapp', 'number') ?: (string) config('shop.whatsapp') ?: (string) shop_config('contact_phone'));
+        $url = 'https://wa.me/'.$number;
+
+        return $message ? $url.'?text='.rawurlencode($message) : $url;
+    }
+}
+
+if (! function_exists('wishlist_ids')) {
+    /** Product ids on the current visitor's wishlist (memoized per request). */
+    function wishlist_ids(): array
+    {
+        if (! module_enabled('wishlist')) {
+            return [];
+        }
+
+        // Request-scoped (not `static`) so long-lived processes and test suites never leak ids between visitors.
+        $attributes = request()->attributes;
+
+        if (! $attributes->has('wishlist_ids')) {
+            try {
+                $attributes->set('wishlist_ids', app(\App\Services\WishlistService::class)->productIds());
+            } catch (\Throwable) {
+                $attributes->set('wishlist_ids', []);
+            }
+        }
+
+        return $attributes->get('wishlist_ids');
+    }
+}
+
+if (! function_exists('wishlist_count')) {
+    function wishlist_count(): int
+    {
+        return count(wishlist_ids());
+    }
+}
+
+if (! function_exists('cms_image')) {
+    /**
+     * URL for a CMS image value: http(s) URLs and site paths pass through, uploaded
+     * "cms/…" files resolve through the public storage link on the current host.
+     */
+    function cms_image(?string $value, ?string $fallback = null): ?string
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return $fallback;
+        }
+
+        if (preg_match('#^https?://#i', $value)) {
+            return $value;
+        }
+
+        if (str_starts_with($value, '/')) {
+            return $value;
+        }
+
+        return asset('storage/'.ltrim($value, '/'));
+    }
+}
+
+if (! function_exists('cms_link')) {
+    /** Normalises an editor-supplied link ("/products", "#faq", "tel:…", https URL). */
+    function cms_link(?string $value, string $fallback = '#'): string
+    {
+        $value = trim((string) $value);
+
+        return $value !== '' ? $value : $fallback;
+    }
+}
+
+if (! function_exists('module_enabled')) {
+    /** Is this dashboard-controlled feature switched on? See App\Support\Modules\ModuleRegistry. */
+    function module_enabled(string $module): bool
+    {
+        return app(\App\Support\Modules\ModuleSettings::class)->enabled($module);
+    }
+}
+
+if (! function_exists('module_value')) {
+    /** A setting belonging to a module (e.g. module_value('gift_options', 'fee')). */
+    function module_value(string $module, string $field, mixed $fallback = null): mixed
+    {
+        return app(\App\Support\Modules\ModuleSettings::class)->value($module, $field, $fallback);
+    }
+}

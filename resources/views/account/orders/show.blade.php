@@ -12,7 +12,7 @@
                 <h1 class="section-title">{{ $order->order_number }}</h1>
                 <p class="text-slate-500 mt-1">{{ $order->created_at->format('F d, Y') }}</p>
             </div>
-            <a href="{{ route('account.orders.invoice', $order) }}" class="btn-outline !py-2 !px-4 text-sm">Download Invoice</a>
+            @if(module_enabled('invoice'))<a href="{{ route('account.orders.invoice', $order) }}" class="btn-outline !py-2 !px-4 text-sm">Download Invoice</a>@endif
         </div>
 
         <div class="bg-white rounded-2xl border border-slate-100 shadow-card p-6 mb-6">
@@ -28,6 +28,12 @@
                     </div>
                 @endforeach
             </div>
+            @if($order->discount > 0)
+                <div class="flex justify-between text-sm text-sage-700 mt-4"><span>Coupon {{ $order->coupon_code }}</span><span>− {{ shop_money($order->discount) }}</span></div>
+            @endif
+            @if($order->gift_wrap)
+                <div class="flex justify-between text-sm text-slate-600 mt-2"><span>Gift wrap</span><span>{{ shop_money($order->gift_wrap_fee) }}</span></div>
+            @endif
             <div class="border-t border-slate-100 mt-4 pt-4 flex justify-between font-bold text-lg">
                 <span>Total</span>
                 <span class="text-sage-700">{{ shop_money($order->total) }}</span>

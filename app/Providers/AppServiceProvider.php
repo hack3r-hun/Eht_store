@@ -23,7 +23,8 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        // One instance per request: all module switches come from a single cached query.
+        $this->app->singleton(\App\Support\Modules\ModuleSettings::class);
     }
 
     public function boot(): void
@@ -55,6 +56,13 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('layouts.storefront', function ($view) {
             $view->with('cartCount', app(CartService::class)->count());
+            $view->with('footerPages', Cache::remember('cms.footer_pages', 300, function () {
+                return \App\Models\Page::where('is_published', true)->get()
+                    ->filter(fn ($page) => ! $page->isSystem() && $page->metaValue('show_in_footer'))
+                    ->map(fn ($page) => ['title' => $page->title, 'slug' => $page->slug])
+                    ->values()
+                    ->all();
+            }));
         });
 
         View::composer('layouts.admin', function ($view) {
@@ -63,12 +71,18 @@ class AppServiceProvider extends ServiceProvider
                     'pending_orders' => Order::whereIn('status', ['pending', 'awaiting_cod'])->count(),
                     'unread_messages' => ContactMessage::where('is_read', false)->count(),
                     'low_stock' => app(InventoryService::class)->lowStockCount(),
+                    'pending_reviews' => \App\Models\Review::where('is_approved', false)->count(),
+                    'new_custom_orders' => \App\Models\CustomOrder::where('status', 'new')->count(),
                 ];
             }));
         });
 
         Event::listen(Login::class, function (Login $event) {
             app(CartService::class)->mergeGuestCart($event->user->id);
+
+            if (request()->hasSession()) {
+                app(\App\Services\WishlistService::class)->mergeGuest($event->user->id, session()->getId());
+            }
         });
     }
 

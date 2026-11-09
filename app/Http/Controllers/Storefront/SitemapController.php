@@ -14,7 +14,9 @@ class SitemapController extends Controller
         $content = Cache::remember('sitemap.xml', 300, function () {
             $products = Product::where('is_active', true)->get(['slug', 'updated_at']);
 
-            return view('sitemap', compact('products'))->render();
+            $pages = \App\Models\Page::where('is_published', true)->get(['slug', 'updated_at'])->reject(fn ($page) => $page->isSystem());
+
+            return view('sitemap', compact('products', 'pages'))->render();
         });
 
         return response($content, 200)->header('Content-Type', 'application/xml');

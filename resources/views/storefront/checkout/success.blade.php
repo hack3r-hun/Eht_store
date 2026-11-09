@@ -3,9 +3,9 @@
 @section('title', 'Order Confirmed')
 
 @section('content')
-    <section class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center animate-fade-in-up">
-        <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-green-100 flex items-center justify-center">
-            <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+    <section data-confetti class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center animate-fade-in-up">
+        <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-green-100 flex items-center justify-center animate-pop">
+            <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path class="draw-check" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
         </div>
         <h1 class="text-3xl font-bold text-charcoal-700 mb-4">Thank You!</h1>
         <p class="text-slate-500 mb-2">Your order has been placed successfully.</p>

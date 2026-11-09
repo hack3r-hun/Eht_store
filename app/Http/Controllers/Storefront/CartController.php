@@ -24,7 +24,10 @@ class CartController extends Controller
         $items = $this->cartService->items();
         $totals = $this->checkoutService->calculateTotals();
 
-        return view('storefront.cart.index', compact('items', 'totals'));
+        $presented = self::presentTotals($totals);
+        $couponCode = $totals['couponCode'];
+
+        return view('storefront.cart.index', compact('items', 'totals', 'presented', 'couponCode'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -104,11 +107,34 @@ class CartController extends Controller
     {
         $totals = $this->checkoutService->calculateTotals();
 
+        return self::presentTotals($totals);
+    }
+
+    /**
+     * Display-ready totals shared by the cart page and its AJAX updates, including the
+     * free-shipping progress bar state.
+     *
+     * @return array<string, mixed>
+     */
+    public static function presentTotals(array $totals): array
+    {
+        $threshold = (float) ($totals['free_shipping_threshold'] ?? 0);
+        $taxable = (float) ($totals['taxable'] ?? $totals['subtotal']);
+        $remaining = max($threshold - $taxable, 0);
+
         return [
             'subtotal' => shop_money($totals['subtotal']),
+            'discount' => ($totals['discount'] ?? 0) > 0 ? '− '.shop_money($totals['discount']) : '',
+            'hasDiscount' => ($totals['discount'] ?? 0) > 0,
             'tax' => shop_money($totals['tax']),
             'shipping' => $totals['shipping'] > 0 ? shop_money($totals['shipping']) : 'Free',
             'total' => shop_money($totals['total']),
+            'shipProgress' => $threshold > 0 ? (int) round(min($taxable / $threshold, 1) * 100) : 100,
+            'shipMessage' => match (true) {
+                $threshold <= 0 => '',
+                $remaining <= 0 => 'You\'ve unlocked free shipping!',
+                default => 'Add '.shop_money($remaining).' more for free shipping',
+            },
         ];
     }
 

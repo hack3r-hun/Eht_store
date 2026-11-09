@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ContactRequest;
 use App\Mail\ContactFormSubmitted;
 use App\Models\ContactMessage;
+use App\Models\Page;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -14,7 +15,7 @@ class ContactController extends Controller
 {
     public function index()
     {
-        return view('storefront.contact');
+        return view('storefront.contact', ['page' => Page::forSlug('contact')]);
     }
 
     public function store(ContactRequest $request): RedirectResponse

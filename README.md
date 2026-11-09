@@ -183,3 +183,67 @@ php artisan test
   ```
 - Set up queue worker for mail: `php artisan queue:work`
 - Confirm security headers (CSP, HSTS) and Sanctum token expiry (`SANCTUM_TOKEN_EXPIRATION`, default 7 days)
+## Storefront Features Added
+
+- **Reviews & ratings** with verified-buyer auto-publish and admin approval (`Admin → Reviews`)
+- **Wishlist** for guests and customers (merged on login)
+- **Custom order requests** with reference photo (`Admin → Custom Orders`)
+- **Gift options** at checkout (wrap fee `SHOP_GIFT_WRAP_FEE`, message, hide prices on invoice)
+- **Order tracking** at `/track-order` (order number + email or phone)
+- **WhatsApp** buttons (`SHOP_WHATSAPP`, otherwise the contact phone)
+- **Back-in-stock email alerts**, newsletter popup, low-stock badges, recently viewed, image zoom/lightbox
+- **Free-shipping progress bar** in the cart
+- **Coupons** are built but currently switched off — search the code for `COUPONS (disabled` to re-enable.
+
+## CMS / Page Builder
+
+`Admin → CMS Pages` edits every storefront page (Home, About, Products, Contact, Custom Order,
+Track Order, Shipping/Returns/Care) and lets you create new pages served at `/p/{slug}`.
+
+- Pages are an ordered list of **sections** (hero, icon cards, stats, text, image + text, product grid,
+  collections, testimonials, FAQ, gallery, call-to-action, divider, info card, quote). Reorder, hide,
+  duplicate, delete, restyle, and upload images from the editor.
+- Until a layout is saved, a page shows its built-in design (`app/Support/Cms/PageDefaults.php`);
+  **Reset to original** returns to it.
+- Add a new block type: describe it in `app/Support/Cms/SectionSchema.php` and create
+  `resources/views/components/cms/{type}.blade.php`. The editor form, validation and sanitising follow the schema.
+- `Admin → Navigation & Footer` controls the header menu, footer links/text, top-bar message and social links.
+- Uploaded CMS images need the storage link: `php artisan storage:link`.
+
+## Responsive Design
+
+The storefront and admin are built mobile-first and checked at 320 / 390 / 414 / 600 / 768 / 820 / 1024 / 1440 px.
+Tablets (below 1024px) use the hamburger menu; phones also get the bottom tab bar.
+
+## Admin: Dashboard vs Statistics
+
+- **Dashboard** is for *today*: sales/orders today, a "needs your attention" to-do list (orders to confirm or ship,
+  custom requests, messages, reviews, stock), recent orders and low stock.
+- **Statistics** is for *analysis*: pick a period (today / 7 / 30 days / month / last month / year / custom); every
+  number is compared with the previous period of the same length. Charts cover sales over time, best weekdays and hours,
+  order status, payment methods, best sellers, collections, delivery cities, new vs returning customers, audience growth,
+  stock health, wishlist demand, custom orders and review ratings, plus a plain-language summary and a CSV export.
+  The logic lives in `app/Services/StatisticsService.php`.
+- **Settings → Change your password** lets the signed-in admin change their own password.
+
+## Guest customers & offers (email / SMS)
+
+- Every order saves a normalised contact record (`contact_name`, `contact_email`, `contact_phone` in international digits,
+  and `marketing_opt_in`). Guests are matched across orders by email — or by phone when no email is given.
+- Statistics count guests as customers (new vs returning, guest vs account).
+- `Admin → Customers → Everyone who ordered` lists guests and account holders, with filters and a **CSV download**
+  for email/SMS tools. Checkout has a "Send me news and special offers" tick box; the list shows the latest choice per person.
+- The admin dashboard has a **Refresh** button and optional 45-second **Auto-refresh** that updates numbers, the to-do list and
+  sidebar badges in place and announces new orders.
+
+## Dashboard → Modules & Invoice
+
+- **Modules** (`Admin → Modules`) switches shop features on/off and tunes them without code changes: accepting orders
+  (with a closed message), guest checkout, payment methods, gift options, coupons, stock badges, reviews, wishlist,
+  newsletter pop-up, back-in-stock alerts, recently viewed, custom orders, order tracking, WhatsApp and customer invoices.
+  Add a feature switch in `app/Support/Modules/ModuleRegistry.php` and check it with `module_enabled('key')` /
+  `module_value('key', 'field')`; protect routes with `->middleware('module:key')`.
+- **Invoice** (`Admin → Invoice`) controls the PDF invoice: company details (“From”), tax number, logo, accent colour,
+  paper size, number prefix, 17 show/hide switches, wording, bank details, terms and the copyright line
+  (“© {year} EK Yarn Co. All rights reserved.”, also saved as the PDF author). Preview with a sample or the latest order.
+  Rendering lives in `app/Services/InvoiceBuilder.php` and `resources/views/invoices/order.blade.php`.

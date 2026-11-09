@@ -1,20 +1,10 @@
 @extends('layouts.storefront')
 
-@section('title', 'Products')
+@section('title', $page->metaValue('meta_title') ?: 'Products')
 @section('meta_description', 'Browse crochet, knitted accessories, amigurumi, coasters, scrunchies, wallets, headbands, sweaters, shawls, and custom gifts at '.shop_name())
 
 @section('content')
-    <section class="hero-section py-16 md:py-20">
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <x-reveal type="fade-up">
-                <span class="hero-eyebrow">Full Collection</span>
-                <h1 class="hero-title">Handmade Products</h1>
-            </x-reveal>
-            <x-reveal type="fade-up" delay="150">
-                <p class="text-slate-500 text-lg max-w-2xl">Browse crochet, knitted accessories, amigurumi, coasters, scrunchies, wallets, headbands, cozy wearables, and custom gifts.</p>
-            </x-reveal>
-        </div>
-    </section>
+    <x-cms.sections :page="$page" part="top" />
 
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <x-reveal type="fade-up" class="lg:hidden mb-6 flex items-center gap-3">
@@ -197,4 +187,5 @@
             </div>
         </div>
     </section>
+    <x-cms.sections :page="$page" part="bottom" />
 @endsection

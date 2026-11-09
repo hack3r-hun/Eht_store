@@ -117,7 +117,7 @@ class PageSmokeTest extends TestCase
             'subject' => 'Hello',
             'message' => 'Testing',
         ]);
-        $page = Page::create(['slug' => 'about', 'title' => 'About Us', 'content' => 'Hello']);
+        $page = Page::updateOrCreate(['slug' => 'about'], ['title' => 'About Us', 'content' => 'Hello']);
         $category = Category::first();
 
         $this->actingAs($this->admin);

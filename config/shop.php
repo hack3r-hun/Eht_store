@@ -21,5 +21,9 @@ return [
     'low_stock_threshold' => (int) env('SHOP_LOW_STOCK', 5),
     'contact_email' => env('SHOP_CONTACT_EMAIL', 'hello@ekyarnco.local'),
     'contact_phone' => env('SHOP_CONTACT_PHONE', '+92 300 1234567'),
+    // Digits-only international number for wa.me links; falls back to the contact phone.
+    'whatsapp' => env('SHOP_WHATSAPP'),
+    'gift_wrap_fee' => (float) env('SHOP_GIFT_WRAP_FEE', 150),
+    'default_lead_time' => env('SHOP_DEFAULT_LEAD_TIME', '3-5 days'),
     'contact_address' => env('SHOP_CONTACT_ADDRESS', 'Karachi, Pakistan'),
 ];

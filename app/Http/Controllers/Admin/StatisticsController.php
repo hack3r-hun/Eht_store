@@ -2,130 +2,77 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
-use App\Models\ContactMessage;
 use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\Product;
-use App\Models\User;
-use App\Services\InventoryService;
-use Carbon\Carbon;
+use App\Services\StatisticsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class StatisticsController extends Controller
 {
-    public function __construct(protected InventoryService $inventoryService) {}
+    public function __construct(protected StatisticsService $statistics) {}
 
     public function index(Request $request): View
     {
-        [$start, $end, $period] = $this->dateRange($request);
+        [$start, $end, $period] = $this->statistics->resolveRange($request);
 
-        // This page runs ~10 queries (several GROUP BY/date-bucketed) per view with no
-        // caching previously — short TTL keyed by the resolved date range keeps repeated
-        // views/filter toggles from re-running them every time.
-        $cacheKey = 'admin.statistics.'.md5($period.'|'.$start->toDateTimeString().'|'.$end->toDateTimeString());
+        // The page runs a couple dozen queries; a short cache keyed by the exact range keeps
+        // switching tabs/filters snappy while staying fresh enough for day-to-day use.
+        $data = Cache::remember(
+            'admin.statistics.v2.'.md5($start->toDateTimeString().'|'.$end->toDateTimeString()),
+            60,
+            fn () => $this->statistics->build($start, $end)
+        );
 
-        [$summary, $statusBreakdown, $paymentBreakdown, $topProducts, $trend] = Cache::remember($cacheKey, 60, function () use ($start, $end, $period) {
-            $ordersInRange = Order::whereBetween('created_at', [$start, $end]);
-            $paidOrdersInRange = (clone $ordersInRange)->where('payment_status', PaymentStatus::Paid);
-
-            $summary = [
-                'orders' => (clone $ordersInRange)->count(),
-                'paid_revenue' => (float) (clone $paidOrdersInRange)->sum('total'),
-                'average_order' => (float) (clone $ordersInRange)->avg('total'),
-                'new_customers' => User::role('customer')->whereBetween('created_at', [$start, $end])->count(),
-                'products' => Product::count(),
-                'active_products' => Product::where('is_active', true)->count(),
-                // Per-variant aware: Product.stock_quantity is a rolled-up sum across sizes.
-                'low_stock' => $this->inventoryService->lowStockCount(),
-                'messages' => ContactMessage::whereBetween('created_at', [$start, $end])->count(),
-            ];
-
-            $statusBreakdown = (clone $ordersInRange)
-                ->select('status', DB::raw('count(*) as orders_count'), DB::raw('sum(total) as revenue'))
-                ->groupBy('status')
-                ->orderByDesc('orders_count')
-                ->get();
-
-            $paymentBreakdown = (clone $ordersInRange)
-                ->select('payment_method', 'payment_status', DB::raw('count(*) as orders_count'), DB::raw('sum(total) as revenue'))
-                ->groupBy('payment_method', 'payment_status')
-                ->orderByDesc('orders_count')
-                ->get();
-
-            $topProducts = OrderItem::query()
-                ->whereHas('order', fn ($query) => $query->whereBetween('created_at', [$start, $end]))
-                ->select('product_name', 'product_sku', DB::raw('sum(quantity) as units_sold'), DB::raw('sum(line_total) as revenue'))
-                ->groupBy('product_name', 'product_sku')
-                ->orderByDesc('revenue')
-                ->take(10)
-                ->get();
-
-            $bucketExpression = $this->bucketExpression($period);
-
-            $trend = Order::whereBetween('created_at', [$start, $end])
-                ->selectRaw("{$bucketExpression} as bucket")
-                ->selectRaw('count(*) as orders_count, sum(total) as revenue')
-                ->groupBy('bucket')
-                ->orderBy('bucket')
-                ->get();
-
-            return [$summary, $statusBreakdown, $paymentBreakdown, $topProducts, $trend];
-        });
-
-        return view('admin.statistics.index', compact(
-            'summary',
-            'statusBreakdown',
-            'paymentBreakdown',
-            'topProducts',
-            'trend',
-            'start',
-            'end',
-            'period',
-        ));
+        return view('admin.statistics.index', [
+            'data' => $data,
+            'start' => $start,
+            'end' => $end,
+            'period' => $period,
+            'presets' => StatisticsService::PRESETS,
+        ]);
     }
 
-    protected function dateRange(Request $request): array
+    /** CSV of every order in the selected range, for spreadsheets / the accountant. */
+    public function export(Request $request): StreamedResponse
     {
-        $period = $request->get('period', 'month');
-        $now = now();
+        [$start, $end] = $this->statistics->resolveRange($request);
+        $filename = 'orders-'.$start->format('Y-m-d').'-to-'.$end->format('Y-m-d').'.csv';
 
-        return match ($period) {
-            'day' => [$now->copy()->startOfDay(), $now->copy()->endOfDay(), 'day'],
-            'year' => [
-                Carbon::create((int) $request->input('year', $now->year), 1, 1)->startOfYear(),
-                Carbon::create((int) $request->input('year', $now->year), 1, 1)->endOfYear(),
-                'year',
-            ],
-            'custom' => [
-                Carbon::parse($request->input('date_from', $now->copy()->startOfMonth()->toDateString()))->startOfDay(),
-                Carbon::parse($request->input('date_to', $now->copy()->endOfMonth()->toDateString()))->endOfDay(),
-                'custom',
-            ],
-            default => [
-                Carbon::parse($request->input('month', $now->format('Y-m')).'-01')->startOfMonth(),
-                Carbon::parse($request->input('month', $now->format('Y-m')).'-01')->endOfMonth(),
-                'month',
-            ],
-        };
+        return response()->streamDownload(function () use ($start, $end) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Order', 'Date', 'Status', 'Payment method', 'Payment status', 'City', 'Subtotal', 'Discount', 'Shipping', 'Tax', 'Gift wrap', 'Total']);
+
+            Order::whereBetween('created_at', [$start, $end])->orderBy('created_at')->chunk(500, function ($orders) use ($out) {
+                foreach ($orders as $order) {
+                    fputcsv($out, array_map([$this, 'safeCell'], [
+                        $order->order_number,
+                        $order->created_at->format('Y-m-d H:i'),
+                        $order->status->label(),
+                        $order->payment_method->label(),
+                        $order->payment_status->label(),
+                        $order->shipping_address['city'] ?? '',
+                        $order->subtotal,
+                        $order->discount,
+                        $order->shipping,
+                        $order->tax,
+                        $order->gift_wrap_fee,
+                        $order->total,
+                    ]));
+                }
+            });
+
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
-    protected function bucketExpression(string $period): string
+    /** Stops spreadsheet apps from executing text that starts like a formula (=, +, -, @). */
+    public function safeCell(mixed $value): mixed
     {
-        $driver = DB::connection()->getDriverName();
-
-        if ($period === 'year') {
-            return $driver === 'sqlite'
-                ? "strftime('%Y-%m', created_at)"
-                : "DATE_FORMAT(created_at, '%Y-%m')";
-        }
-
-        return $driver === 'sqlite'
-            ? 'date(created_at)'
-            : 'DATE(created_at)';
+        return is_string($value) && $value !== '' && in_array($value[0], ['=', '+', '-', '@', "\t", "\r"], true)
+            ? "'".$value
+            : $value;
     }
 }

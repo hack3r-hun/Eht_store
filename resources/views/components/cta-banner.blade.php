@@ -1,8 +1,8 @@
 @props([
     'title',
     'description' => null,
-    'primaryLabel',
-    'primaryHref',
+    'primaryLabel' => null,
+    'primaryHref' => '#',
     'secondaryLabel' => null,
     'secondaryHref' => null,
     'secondaryIcon' => null,
@@ -18,7 +18,9 @@
             <p class="text-slate-500 mb-8 max-w-xl mx-auto text-lg">{{ $description }}</p>
         @endif
         <div class="flex flex-wrap justify-center gap-4">
-            <a href="{{ $primaryHref }}" class="btn-primary">{{ $primaryLabel }}</a>
+            @if($primaryLabel)
+                <a href="{{ $primaryHref }}" class="btn-primary">{{ $primaryLabel }}</a>
+            @endif
             @if($secondaryLabel)
                 <a href="{{ $secondaryHref }}" class="btn-outline inline-flex items-center gap-2">
                     @if($secondaryIcon)

@@ -7,6 +7,11 @@
         <x-admin-page-header :count="$customers->total()" count-label="registered customers" subtitle="Search customers and sort by order activity" />
     </x-reveal>
 
+    <div class="flex gap-2 mb-5 border-b border-slate-200">
+        <a href="{{ route('admin.customers.index') }}" class="px-4 py-2.5 text-sm font-semibold text-sage-700 border-b-2 border-sage-600 -mb-px">Registered accounts</a>
+        <a href="{{ route('admin.customers.buyers') }}" class="px-4 py-2.5 text-sm font-semibold text-slate-500 hover:text-sage-700 border-b-2 border-transparent -mb-px">Everyone who ordered <span class="text-xs font-normal">(guests too)</span></a>
+    </div>
+
     <x-reveal type="fade-up" delay="40">
         <form method="GET" class="admin-filter-bar">
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, email, phone" class="input-field admin-filter-search">
