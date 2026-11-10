@@ -47,7 +47,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Behind a known reverse proxy (Railway, Cloudflare, nginx), "*" is fine.
         // Document TRUSTED_PROXIES if you need to restrict later.
-        $middleware->trustProxies(at: '*');
+        // TRUSTED_PROXIES: comma-separated IPs/CIDRs of your load balancer. Defaults to "*"
+        // (fine on Railway/Cloudflare where the app is only reachable through the proxy);
+        // restrict it if the app is ever directly reachable, otherwise X-Forwarded-For can be
+        // spoofed to dodge IP-based rate limits.
+        $trusted = env('TRUSTED_PROXIES', '*');
+        $middleware->trustProxies(at: $trusted === '*' ? '*' : array_map('trim', explode(',', $trusted)));
 
         $middleware->web(append: [
             \App\Http\Middleware\SecurityHeaders::class,

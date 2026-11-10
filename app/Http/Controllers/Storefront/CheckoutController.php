@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
@@ -109,6 +110,11 @@ class CheckoutController extends Controller
 
         if ($order->payment_status === PaymentStatus::Paid) {
             return redirect()->route('checkout.success', $order);
+        }
+
+        if ($order->status === OrderStatus::Cancelled) {
+            return redirect()->route('checkout.success', $order)
+                ->with('error', 'This order was cancelled and can no longer be paid. Please place a new order.');
         }
 
         if (! $this->paymentService->isConfigured()) {

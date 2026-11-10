@@ -88,7 +88,11 @@ class OrderController extends Controller
             'status' => ['required', 'in:'.implode(',', array_column(OrderStatus::cases(), 'value'))],
         ]);
 
-        $this->orderService->updateStatus($order, OrderStatus::from($request->status));
+        try {
+            $this->orderService->updateStatus($order, OrderStatus::from($request->status));
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Order status updated.');
     }

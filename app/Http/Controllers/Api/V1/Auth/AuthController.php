@@ -85,7 +85,10 @@ class AuthController extends ApiController
 
         $user = User::where('email', $request->email)->first();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        // Always run a hash check so response time doesn't reveal whether the email exists.
+        $hash = $user?->password ?? '$2y$12$usesomesillystringfore7hnbRJHxXVLeakoG8K30oukPsA.ztMG';
+
+        if (! Hash::check($request->password, $hash) || ! $user) {
             RateLimiter::hit($throttleKey);
 
             Log::channel('security')->warning('api_login_failed', [

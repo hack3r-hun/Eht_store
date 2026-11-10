@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Mail\OrderPlaced;
 use App\Models\Order;
 use App\Models\Payment;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Stripe\Exception\ApiErrorException;
 use Stripe\PaymentIntent;
@@ -79,6 +81,17 @@ class PaymentService
             return true;
         }
 
+        // A cancelled/expired order has already had its stock returned; marking it paid
+        // would sell goods that may no longer exist. Needs a manual refund instead.
+        if ($order->status === OrderStatus::Cancelled) {
+            Log::channel('security')->warning('payment_for_cancelled_order', [
+                'order_id' => $order->id,
+                'payment_intent' => $paymentIntentId,
+            ]);
+
+            return false;
+        }
+
         $intent = PaymentIntent::retrieve($paymentIntentId);
 
         if ($intent->status !== 'succeeded') {
@@ -106,13 +119,13 @@ class PaymentService
 
     public function markPaid(Order $order, ?string $paymentIntentId = null): void
     {
-        if ($order->payment_status === PaymentStatus::Paid) {
+        if ($order->payment_status === PaymentStatus::Paid || $order->status === OrderStatus::Cancelled) {
             return;
         }
 
         $order->update([
             'payment_status' => PaymentStatus::Paid,
-            'status' => \App\Enums\OrderStatus::Paid,
+            'status' => OrderStatus::Paid,
         ]);
 
         $order->payment?->update([
@@ -127,6 +140,10 @@ class PaymentService
 
         if (! $secret) {
             throw new \RuntimeException('Stripe webhook secret not configured.');
+        }
+
+        if (! $signature) {
+            throw new \RuntimeException('Missing Stripe signature.');
         }
 
         $event = Webhook::constructEvent($payload, $signature, $secret);

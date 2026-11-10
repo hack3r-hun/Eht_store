@@ -22,6 +22,7 @@ class AdminPasswordController extends Controller
         ]);
 
         $request->user()->update(['password' => Hash::make($validated['password'])]);
+        $request->user()->tokens()->delete();
 
         return redirect()->route('admin.settings.index')->with('success', 'Your password was changed.');
     }

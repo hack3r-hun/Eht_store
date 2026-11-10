@@ -95,6 +95,10 @@ class CheckoutController extends ApiController
             return $this->error('This order does not use card payment.', 422);
         }
 
+        if ($order->status === \App\Enums\OrderStatus::Cancelled) {
+            return $this->error('This order was cancelled and can no longer be paid.', 422);
+        }
+
         $intentId = $order->payment?->stripe_payment_intent_id
             ?? $request->string('payment_intent_id')->toString();
 

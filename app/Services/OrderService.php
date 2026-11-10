@@ -17,7 +17,15 @@ class OrderService
     public function updateStatus(Order $order, OrderStatus $status): Order
     {
         DB::transaction(function () use ($order, $status) {
+            // Lock the row so two admins (or the expiry job) can't restock the same order twice.
+            $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
             $previous = $order->status;
+
+            // Cancelling returns the stock; reviving a cancelled order would ship goods that
+            // were already put back on the shelf (and a second cancel would restock them again).
+            if ($previous === OrderStatus::Cancelled && $status !== OrderStatus::Cancelled) {
+                throw new \RuntimeException('A cancelled order cannot be reopened. Ask the customer to place a new order.');
+            }
 
             $order->update(['status' => $status]);
 

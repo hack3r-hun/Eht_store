@@ -27,8 +27,12 @@ class ImageProcessor
         $manager = new ImageManager(new Driver);
         $image = $manager->read($file->getRealPath());
 
-        $extension = strtolower($file->getClientOriginalExtension()) ?: 'jpg';
-        $extension = in_array($extension, ['jpg', 'jpeg', 'png', 'webp'], true) ? $extension : 'jpg';
+        // Derive the extension from the real (sniffed) content type, never the client's filename.
+        $extension = match ($file->getMimeType()) {
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+            default => 'jpg',
+        };
         $filename = $directory.'/'.uniqid().'.'.$extension;
 
         $detail = clone $image;

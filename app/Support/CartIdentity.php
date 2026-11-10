@@ -29,7 +29,8 @@ class CartIdentity
             ?? request()->header('X-Guest-Cart-Token')
             ?? request()->attributes->get('guest_cart_token');
 
-        if ($token) {
+        // Guest tokens are opaque identifiers (UUID / session id); reject anything odd-sized.
+        if (is_string($token) && $token !== '' && strlen($token) <= 100) {
             return new self(guestToken: $token);
         }
 

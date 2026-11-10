@@ -74,7 +74,11 @@ class OrderController extends ApiController
             'status' => ['required', 'in:'.implode(',', array_column(OrderStatus::cases(), 'value'))],
         ]);
 
-        $this->orderService->updateStatus($order, OrderStatus::from($request->status));
+        try {
+            $this->orderService->updateStatus($order, OrderStatus::from($request->status));
+        } catch (\RuntimeException $e) {
+            return $this->error($e->getMessage(), 422);
+        }
 
         return $this->success(new OrderResource($order->fresh(['items', 'payment', 'user'])));
     }
